@@ -8,12 +8,12 @@ from src.models.vae import SpectrogramVAE
 
 DAFX_TO_USE = [
     'mda MultiBand',
-    'mda Overdrive',
-    'mda Ambience',
-    'mda Delay',
+    # 'mda Overdrive',
+    # 'mda Ambience',
+    # 'mda Delay',
     # 'mda Leslie',
     # 'mda Combo',
-    'mda Thru-Zero Flanger',
+    # 'mda Thru-Zero Flanger',
     # 'mda Loudness',
     # 'mda Limiter'
 ]
@@ -24,11 +24,11 @@ if __name__ == "__main__":
     # callbacks
     wandb_logger = WandbLogger(name='spectrogram_vae_training', project='l5proj_spectrogram_vae')
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
-    early_stopping = EarlyStopping(
-        monitor="val_loss/loss",
-        mode="min",
-        # should cycle through all effects at least twice before early stopping
-        patience=len(DAFX_TO_USE) * 2)
+    # early_stopping = EarlyStopping(
+    #     monitor="val_loss/loss",
+    #     mode="min",
+    #     # should cycle through all effects at least twice before early stopping
+    #     patience=len(DAFX_TO_USE) * 2)
 
     # arg parse for config
     parser = ArgumentParser()
@@ -41,6 +41,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Change settings for training
+    args.input_dirs = ['vctk_24000']
+
     args.train_examples_per_epoch = 5_000
     args.val_examples_per_epoch = 500
 
@@ -58,9 +60,12 @@ if __name__ == "__main__":
         check_val_every_n_epoch=1,
         val_check_interval=1.,
         logger=wandb_logger,
-        callbacks=[checkpoint_callback, early_stopping],
+        callbacks=[
+            checkpoint_callback,
+            # early_stopping
+        ],
         num_sanity_val_steps=0,
-        max_epochs=100,
+        max_epochs=200,
         accelerator='gpu',
         log_every_n_steps=1
     )

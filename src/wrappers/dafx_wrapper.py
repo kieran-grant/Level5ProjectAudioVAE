@@ -2,7 +2,7 @@ import librosa
 import numpy as np
 import torch
 
-from src.utils import *
+import src.utils as utils
 
 
 class DAFXWrapper:

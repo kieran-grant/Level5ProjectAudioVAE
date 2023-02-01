@@ -80,7 +80,7 @@ class SpectrogramVAE(pl.LightningModule):
 
     @staticmethod
     def _calculate_kl_loss(mu, log_var):
-        return -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        return torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":
@@ -157,33 +157,33 @@ class SpectrogramVAE(pl.LightningModule):
             train: bool = False,
     ):
         # Get spectrograms
-        x, y = batch
+        _, y = batch
 
         # Get reconstruction as well as mu, var
-        x_hat, x_mu, x_log_var = self(x)
+        # x_hat, x_mu, x_log_var = self(x)
         y_hat, y_mu, y_log_var = self(y)
 
         # Calculate recon losses for clean/effected signals
-        x_recon_loss = self._calculate_reconstruction_loss(x, x_hat)
-        x_kld = self._calculate_kl_loss(x_mu, x_log_var)
+        # x_recon_loss = self._calculate_reconstruction_loss(x, x_hat)
+        # x_kld = self._calculate_kl_loss(x_mu, x_log_var)
 
         y_recon_loss = self._calculate_reconstruction_loss(y, y_hat)
         y_kld = self._calculate_kl_loss(y_mu, y_log_var)
 
         # Total loss is additive
-        x_loss = x_recon_loss + (self.hparams.vae_beta * x_kld)
+        # x_loss = x_recon_loss + (self.hparams.vae_beta * x_kld)
         y_loss = y_recon_loss + (self.hparams.vae_beta * y_kld)
 
-        loss = x_loss + y_loss
+        # loss = x_loss + y_loss
 
         # log the losses
-        self.log(("train" if train else "val") + "_loss/loss", loss)
-        self.log(("train" if train else "val") + "_loss/x_reconstruction_loss", x_recon_loss)
-        self.log(("train" if train else "val") + "_loss/x_kl_divergence", x_kld)
+        self.log(("train" if train else "val") + "_loss/loss", y_loss)
+        # self.log(("train" if train else "val") + "_loss/x_reconstruction_loss", x_recon_loss)
+        # self.log(("train" if train else "val") + "_loss/x_kl_divergence", x_kld)
         self.log(("train" if train else "val") + "_loss/y_reconstruction_loss", y_recon_loss)
         self.log(("train" if train else "val") + "_loss/y_kl_divergence", y_kld)
 
-        return loss
+        return y_loss
 
     def training_step(self, batch, batch_idx):
         loss = self.common_paired_step(
@@ -296,7 +296,7 @@ class SpectrogramVAE(pl.LightningModule):
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
-        parser.add_argument("--latent_dim", type=int, default=256)
+        parser.add_argument("--latent_dim", type=int, default=1024)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
