@@ -177,7 +177,7 @@ class SpectrogramVAE(pl.LightningModule):
         loss = x_loss + y_loss
 
         # log the losses
-        self.log(("train" if train else "val") + "_loss/", loss)
+        self.log(("train" if train else "val") + "_loss/loss", loss)
         self.log(("train" if train else "val") + "_loss/x_reconstruction_loss", x_recon_loss)
         self.log(("train" if train else "val") + "_loss/x_kl_divergence", x_kld)
         self.log(("train" if train else "val") + "_loss/y_reconstruction_loss", y_recon_loss)
@@ -261,7 +261,7 @@ class SpectrogramVAE(pl.LightningModule):
             random_effect_threshold=self.hparams.random_effect_threshold,
             augmentations={},
             ext=self.hparams.ext,
-
+            dummy_setting=self.hparams.dummy_setting
         )
 
         g = torch.Generator()
@@ -308,13 +308,13 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--dsp_sample_rate", type=int, default=24_000)
         parser.add_argument("--shuffle", type=bool, default=True)
         parser.add_argument("--random_effect_threshold", type=float, default=0.75)
-        parser.add_argument("--train_length", type=int, default=131_072)
+        parser.add_argument("--train_length", type=int, default=65_536)
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_input", type=bool, default=True)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
         parser.add_argument("--train_examples_per_epoch", type=int, default=10_000)
-        parser.add_argument("--val_length", type=int, default=131_072)
+        parser.add_argument("--val_length", type=int, default=65_536)
         parser.add_argument("--val_examples_per_epoch", type=int, default=100)
         parser.add_argument("--num_workers", type=int, default=4)
         parser.add_argument("--dummy_setting", type=bool, default=False)

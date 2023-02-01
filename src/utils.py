@@ -1,5 +1,7 @@
-import torch
 import numpy as np
+import torch
+
+from torchaudio.transforms import MFCC
 
 
 def conform_length(x: torch.Tensor, length: int):
@@ -51,10 +53,76 @@ def is_silent(signal: torch.Tensor):
     return mean < 1e-5
 
 
+def is_noise(original: torch.Tensor,
+             effected: torch.Tensor,
+             sample_rate: int,
+             cosine_similarity_threshold: float = 0.75):
+    """
+    Returns True if difference between original and effected signal is too extreme.
+    """
+    mfcc = MFCC(sample_rate=sample_rate,
+                n_mfcc=30,
+                melkwargs={"n_mels": 60})
+
+    a = mfcc(original)
+    b = mfcc(effected)
+
+    similarity = torch.nn.functional.cosine_similarity(a, b).mean()
+    # print(similarity)
+    return similarity < cosine_similarity_threshold
+
+
+def split_dataset(file_list, subset, train_frac):
+    """Given a list of files, split into train/val/test sets.
+
+    Args:
+        file_list (list): List of audio files.
+        subset (str): One of "train", "val", or "test".
+        train_frac (float): Fraction of the dataset to use for training.
+
+    Returns:
+        file_list (list): List of audio files corresponding to subset.
+    """
+    assert 0.1 < train_frac < 1.0
+
+    total_num_examples = len(file_list)
+
+    train_num_examples = int(total_num_examples * train_frac)
+    val_num_examples = int(total_num_examples * (1 - train_frac) / 2)
+    test_num_examples = total_num_examples - (train_num_examples + val_num_examples)
+
+    if train_num_examples < 0:
+        raise ValueError(
+            f"No examples in training set. Try increasing train_frac: {train_frac}."
+        )
+    elif val_num_examples < 0:
+        raise ValueError(
+            f"No examples in validation set. Try decreasing train_frac: {train_frac}."
+        )
+    elif test_num_examples < 0:
+        raise ValueError(
+            f"No examples in test set. Try decreasing train_frac: {train_frac}."
+        )
+
+    if subset == "train":
+        start_idx = 0
+        stop_idx = train_num_examples
+    elif subset == "val":
+        start_idx = train_num_examples
+        stop_idx = start_idx + val_num_examples
+    elif subset == "test":
+        start_idx = train_num_examples + val_num_examples
+        stop_idx = start_idx + test_num_examples + 1
+    else:
+        raise ValueError("Invalid subset: {subset}.")
+
+    return file_list[start_idx:stop_idx]
+
+
 def audio_to_spectrogram(signal: torch.Tensor,
-                         n_fft: int=4096,
-                         hop_length: int=2048,
-                         window_size: int=4096):
+                         n_fft: int = 4096,
+                         hop_length: int = 2048,
+                         window_size: int = 4096):
     window = torch.nn.Parameter(torch.hann_window(window_size))
 
     # compute spectrogram of waveform
@@ -72,7 +140,6 @@ def audio_to_spectrogram(signal: torch.Tensor,
     # standardize (0, 1) 0.322970 0.278452
     X_db_norm -= 0.322970
     X_db_norm /= 0.278452
-    X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+    X_db_norm = X_db_norm.permute(0, 2, 1)
 
-    return X_db_norm
-
+    return X_db_norm.detach()

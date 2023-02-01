@@ -18,7 +18,7 @@ DAFX_TO_USE = [
     'mda Limiter'
 ]
 
-if __name__ == "main":
+if __name__ == "__main__":
     pl.seed_everything(0)
 
     # callbacks
@@ -40,24 +40,18 @@ if __name__ == "main":
     # Parse
     args = parser.parse_args()
 
-    # Change dummy test vars for debugging
-    args.accelerator = 'gpu'
-    args.device = 'cuda'
-
-    args.max_epochs = 200
+    # Change settings for training
     args.train_examples_per_epoch = 250
     args.val_examples_per_epoch = 20
-    args.batch_size = 16
-    args.num_workers = 2
-    args.vae_beta = 1
-    args.lr = 1e-4
 
+    args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
-    args.log_every_n_steps = 1
+    args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
     args.effect_input = False
     args.dummy_setting = True
 
+    # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
         reload_dataloaders_every_n_epochs=1,
@@ -65,7 +59,10 @@ if __name__ == "main":
         val_check_interval=1.,
         logger=wandb_logger,
         callbacks=[checkpoint_callback, early_stopping],
-        num_sanity_val_steps=0
+        num_sanity_val_steps=0,
+        max_epochs=10,
+        accelerator='gpu',
+        log_every_n_steps=1
     )
 
     # create the System

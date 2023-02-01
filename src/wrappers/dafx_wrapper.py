@@ -181,8 +181,8 @@ class DAFXWrapper:
             random_setting = self.get_random_parameter_settings()
             effected = self.apply(signal, random_setting)
 
-            silent = is_silent(effected) if check_silence else False
-            noise = is_noise(signal, effected, self.sample_rate) if check_noise else False
+            silent = utils.is_silent(effected) if check_silence else False
+            noise = utils.is_noise(signal, effected, self.sample_rate) if check_noise else False
 
             if not silent and not noise:
                 return effected
