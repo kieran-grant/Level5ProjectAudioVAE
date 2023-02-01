@@ -104,7 +104,7 @@ class AudioDataset(torch.utils.data.Dataset):
                 preload=False,
                 half=half,
             )
-            if audio_file.num_frames < (self.length * 2):
+            if audio_file.num_frames < self.length:
                 continue
             input_files[file_id] = audio_file
             input_dur_frames += input_files[file_id].num_frames
@@ -158,8 +158,8 @@ class AudioDataset(torch.utils.data.Dataset):
         input_audio, target_audio = self.generate_pair()
 
         # ------------------------ Conform length of files -------------------
-        input_audio = utils.conform_length(input_audio, int(self.length * 2))
-        target_audio = utils.conform_length(target_audio, int(self.length * 2))
+        input_audio = utils.conform_length(input_audio, int(self.length))
+        target_audio = utils.conform_length(target_audio, int(self.length))
 
         # ------------------------ Apply fade in and fade out -------------------
         input_audio = utils.linear_fade(input_audio, sample_rate=self.sample_rate)
@@ -193,7 +193,7 @@ class AudioDataset(torch.utils.data.Dataset):
                 half=self.half,
             )
 
-            if audio_file.num_frames < (self.length * 2):
+            if audio_file.num_frames < self.length:
                 continue
 
             self.input_files_loaded[file_id] = audio_file
@@ -221,9 +221,9 @@ class AudioDataset(torch.utils.data.Dataset):
             if not input_file.loaded:
                 raise RuntimeError("Audio not loaded.")
 
-            # get a random patch of size `self.length` x 2
+            # get a random patch of size `self.length`
             start_idx, stop_idx = self.get_random_patch(
-                input_file, int(self.length * 2)
+                input_file, int(self.length)
             )
             if start_idx >= 0:
                 break

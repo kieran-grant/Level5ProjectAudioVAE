@@ -41,8 +41,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Change settings for training
-    args.train_examples_per_epoch = 250
-    args.val_examples_per_epoch = 20
+    args.train_examples_per_epoch = 5_000
+    args.val_examples_per_epoch = 500
 
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         logger=wandb_logger,
         callbacks=[checkpoint_callback, early_stopping],
         num_sanity_val_steps=0,
-        max_epochs=10,
+        max_epochs=200,
         accelerator='gpu',
         log_every_n_steps=1
     )
