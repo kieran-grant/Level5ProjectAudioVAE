@@ -14,24 +14,17 @@ from src.wrappers.dafx_wrapper import DAFXWrapper
 
 class SpectrogramVAE(pl.LightningModule):
     # =========== MAGIC METHODS =============
-    def __init__(self,
-                 num_channels: int = 1,
-                 hidden_dim: Tuple = (32, 32, 20),
-                 latent_dim: int = 256,
-                 learning_rate: float = 1e-4
-                 ):
+    def __init__(self, **kwargs):
         super().__init__()
+        self.save_hyperparameters()
 
         # Load instances for each type of DAFX
         self.dafx_list = self._get_dafx_from_names()
         # Create entry for current dafx name for logging
         self.current_dafx = None
 
-        self.num_channels = num_channels
-        self.hidden_dim_enc = prod(hidden_dim)
-        self.hidden_dim_dec = hidden_dim
-        self.latent_dim = latent_dim
-        self.learning_rate = learning_rate
+        self.hidden_dim_enc = prod(self.hparams.hidden_dim)
+        self.hidden_dim_dec = self.hparams.hidden_dim
 
         self._build_model()
 
@@ -42,7 +35,7 @@ class SpectrogramVAE(pl.LightningModule):
 
     def _build_encoder(self):
         self.enc_conv1 = nn.Sequential(
-            nn.Conv2d(self.num_channels, 8, kernel_size=3, padding=1, stride=2),
+            nn.Conv2d(self.hparams.num_channels, 8, kernel_size=3, padding=1, stride=2),
             nn.ReLU(),
             nn.BatchNorm2d(8)
         )
@@ -59,12 +52,12 @@ class SpectrogramVAE(pl.LightningModule):
             nn.BatchNorm2d(32),
         )
 
-        self.mu = nn.Linear(self.hidden_dim_enc, self.latent_dim)
-        self.log_var = nn.Linear(self.hidden_dim_enc, self.latent_dim)
+        self.mu = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
+        self.log_var = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
 
     def _build_decoder(self):
         self.dec_hidden = nn.Sequential(
-            nn.Linear(in_features=self.latent_dim, out_features=self.hidden_dim_enc),
+            nn.Linear(in_features=self.hparams.latent_dim, out_features=self.hidden_dim_enc),
             nn.ReLU())
 
         self.dec_conv1 = nn.Sequential(
@@ -80,18 +73,24 @@ class SpectrogramVAE(pl.LightningModule):
         )
 
         self.dec_conv3 = nn.Sequential(
-            nn.ConvTranspose2d(8, self.num_channels, kernel_size=3, padding=1, stride=2),
+            nn.ConvTranspose2d(8, self.hparams.num_channels, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
 
     @staticmethod
-    def _calculate_loss(y, y_hat, mu, log_var):
-        # The loss is the BCE loss combined with the KL divergence to ensure the distribution is learnt
-        kl_divergence = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-        loss = F.binary_cross_entropy(y, y_hat, reduction='sum') + kl_divergence
+    def _calculate_kl_loss(mu, log_var):
+        return -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-        return loss
+    def _calculate_reconstruction_loss(self, x, x_hat):
+        if self.hparams.recon_loss.lower() == "mse":
+            return F.mse_loss(x, x_hat)
+        elif self.hparams.recon_loss.lower() == "l1":
+            return F.l1_loss(x, x_hat)
+        elif self.hparams.recon_loss.lower() == "bce":
+            return F.binary_cross_entropy(x, x_hat, reduction='sum')
+        else:
+            raise NotImplementedError
 
     def _get_dafx_from_names(self):
         dafx_instances = []
@@ -149,29 +148,58 @@ class SpectrogramVAE(pl.LightningModule):
         return out, mu, log_var
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
-    def training_step(self, train_batch, batch_idx):
-        imgs = train_batch
+    def common_paired_step(
+            self,
+            batch: Tuple,
+            batch_idx: int,
+            train: bool = False,
+    ):
+        # Get spectrograms
+        x, y = batch
 
-        # Feeding a batch of images into the network to obtain the output image, mu, and logVar
-        out, mu, log_var = self(imgs)
+        # Get reconstruction as well as mu, var
+        x_hat, x_mu, x_log_var = self(x)
+        y_hat, y_mu, y_log_var = self(y)
 
-        loss = self._calculate_loss(out, imgs, mu, log_var)
+        # Calculate recon losses for clean/effected signals
+        x_recon_loss = self._calculate_reconstruction_loss(x, x_hat)
+        x_kld = self._calculate_kl_loss(x_mu, x_log_var)
 
-        self.log('train_loss', loss)
+        y_recon_loss = self._calculate_reconstruction_loss(y, y_hat)
+        y_kld = self._calculate_kl_loss(y_mu, y_log_var)
+
+        # Total loss is additive
+        x_loss = x_recon_loss + (self.hparams.vae_beta * x_kld)
+        y_loss = y_recon_loss + (self.hparams.vae_beta * y_kld)
+
+        loss = x_loss + y_loss
+
+        # log the losses
+        self.log(("train" if train else "val") + "_loss/", loss)
+        self.log(("train" if train else "val") + "_loss/x_reconstruction_loss", x_recon_loss)
+        self.log(("train" if train else "val") + "_loss/x_kl_divergence", x_kld)
+        self.log(("train" if train else "val") + "_loss/y_reconstruction_loss", y_recon_loss)
+        self.log(("train" if train else "val") + "_loss/y_kl_divergence", y_kld)
 
         return loss
 
-    def validation_step(self, val_batch, val_idx):
-        imgs = val_batch
+    def training_step(self, batch, batch_idx):
+        loss = self.common_paired_step(
+            batch,
+            batch_idx,
+            train=True,
+        )
 
-        # Feeding a batch of images into the network to obtain the output image, mu, and logVar
-        out, mu, log_var = self(imgs)
+        return loss
 
-        loss = self._calculate_loss(out, imgs, mu, log_var)
-
-        self.log('val_loss', loss)
+    def validation_step(self, batch, batch_idx):
+        loss = self.common_paired_step(
+            batch,
+            batch_idx,
+            train=False,
+        )
 
         return loss
 
@@ -213,7 +241,6 @@ class SpectrogramVAE(pl.LightningModule):
             # persistent_workers=True,
             timeout=6000,
         )
-
 
     def val_dataloader(self):
         dafx = self._get_dafx_for_current_epoch(self.current_epoch)
@@ -258,6 +285,8 @@ class SpectrogramVAE(pl.LightningModule):
         # -------- Training -----------
         parser.add_argument("--batch_size", type=int, default=8)
         parser.add_argument("--lr", type=float, default=1e-4)
+        parser.add_argument("--recon_loss", type=str, default="l1")
+        parser.add_argument("--vae_beta", type=float, default=10.)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
@@ -265,7 +294,6 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
         # --------- VAE -------------
-        parser.add_argument("--vae_beta", type=float, default=100.)
         parser.add_argument("--num_channels", type=int, default=1)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
         parser.add_argument("--latent_dim", type=int, default=256)
