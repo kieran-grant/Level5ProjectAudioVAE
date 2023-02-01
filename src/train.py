@@ -15,7 +15,7 @@ DAFX_TO_USE = [
     # 'mda Combo',
     'mda Thru-Zero Flanger',
     # 'mda Loudness',
-    'mda Limiter'
+    # 'mda Limiter'
 ]
 
 if __name__ == "__main__":
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         logger=wandb_logger,
         callbacks=[checkpoint_callback, early_stopping],
         num_sanity_val_steps=0,
-        max_epochs=200,
+        max_epochs=100,
         accelerator='gpu',
         log_every_n_steps=1
     )
