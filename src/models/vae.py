@@ -1,13 +1,19 @@
+from argparse import ArgumentParser
 from math import prod
 from typing import Tuple
+from pedalboard.pedalboard import load_plugin
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
+from src.dataset.audio_dataset import AudioDataset
+from src.wrappers.dafx_wrapper import DAFXWrapper
+
 
 class SpectrogramVAE(pl.LightningModule):
+    # =========== MAGIC METHODS =============
     def __init__(self,
                  num_channels: int = 1,
                  hidden_dim: Tuple = (32, 32, 20),
@@ -15,6 +21,11 @@ class SpectrogramVAE(pl.LightningModule):
                  learning_rate: float = 1e-4
                  ):
         super().__init__()
+
+        # Load instances for each type of DAFX
+        self.dafx_list = self._get_dafx_from_names()
+        # Create entry for current dafx name for logging
+        self.current_dafx = None
 
         self.num_channels = num_channels
         self.hidden_dim_enc = prod(hidden_dim)
@@ -24,6 +35,7 @@ class SpectrogramVAE(pl.LightningModule):
 
         self._build_model()
 
+    # =========== PRIVATE METHODS =============
     def _build_model(self):
         self._build_encoder()
         self._build_decoder()
@@ -80,6 +92,25 @@ class SpectrogramVAE(pl.LightningModule):
         loss = F.binary_cross_entropy(y, y_hat, reduction='sum') + kl_divergence
 
         return loss
+
+    def _get_dafx_from_names(self):
+        dafx_instances = []
+
+        for dafx_name in self.hparams.dafx_names:
+            dafx = load_plugin(self.hparams.dafx_file, plugin_name=dafx_name)
+            dafx_instances.append(DAFXWrapper(dafx, sample_rate=self.hparams.sample_rate))
+
+        return dafx_instances
+
+    def _get_dafx_for_current_epoch(self, current_epoch: int):
+        # Use mod arithmetic to cycle through dafx
+        idx = current_epoch % len(self.dafx_list)
+
+        self.current_dafx = self.hparams.dafx_names[idx]
+
+        print(f"\nEpoch {current_epoch} using DAFX: {self.current_dafx}")
+
+        return self.dafx_list[idx]
 
     def encode(self, x):
         x = self.enc_conv1(x)
@@ -143,3 +174,121 @@ class SpectrogramVAE(pl.LightningModule):
         self.log('val_loss', loss)
 
         return loss
+
+    def train_dataloader(self):
+        # Return dataloader based on epoch??
+        dafx = self._get_dafx_for_current_epoch(self.current_epoch)
+
+        train_dataset = AudioDataset(
+            dafx=dafx,
+            audio_dir=self.hparams.audio_dir,
+            subset="train",
+            train_frac=self.hparams.train_frac,
+            half=self.hparams.half,
+            length=self.hparams.train_length,
+            input_dirs=self.hparams.input_dirs,
+            buffer_size_gb=self.hparams.buffer_size_gb,
+            buffer_reload_rate=self.hparams.buffer_reload_rate,
+            num_examples_per_epoch=self.hparams.train_examples_per_epoch,
+            effect_input=self.hparams.effect_input,
+            effect_output=self.hparams.effect_output,
+            random_effect_threshold=self.hparams.random_effect_threshold,
+            augmentations={
+                "pitch": {"sr": self.hparams.sample_rate},
+                "tempo": {"sr": self.hparams.sample_rate},
+            },
+            ext=self.hparams.ext,
+            dummy_setting=self.hparams.dummy_setting
+        )
+
+        g = torch.Generator()
+        g.manual_seed(0)
+
+        return torch.utils.data.DataLoader(
+            train_dataset,
+            num_workers=self.hparams.num_workers,
+            batch_size=self.hparams.batch_size,
+            generator=g,
+            # pin_memory=True,
+            # persistent_workers=True,
+            timeout=6000,
+        )
+
+
+    def val_dataloader(self):
+        dafx = self._get_dafx_for_current_epoch(self.current_epoch)
+
+        val_dataset = AudioDataset(
+            dafx=dafx,
+            audio_dir=self.hparams.audio_dir,
+            subset="val",
+            train_frac=self.hparams.train_frac,
+            half=self.hparams.half,
+            length=self.hparams.train_length,
+            input_dirs=self.hparams.input_dirs,
+            buffer_size_gb=self.hparams.buffer_size_gb,
+            buffer_reload_rate=self.hparams.buffer_reload_rate,
+            num_examples_per_epoch=self.hparams.train_examples_per_epoch,
+            effect_input=self.hparams.effect_input,
+            effect_output=self.hparams.effect_output,
+            random_effect_threshold=self.hparams.random_effect_threshold,
+            augmentations={},
+            ext=self.hparams.ext,
+
+        )
+
+        g = torch.Generator()
+        g.manual_seed(0)
+
+        return torch.utils.data.DataLoader(
+            val_dataset,
+            num_workers=self.hparams.num_workers,
+            batch_size=self.hparams.batch_size,
+            # worker_init_fn=utils.seed_worker,
+            generator=g,
+            # pin_memory=True,
+            # persistent_workers=True,
+            timeout=60,
+        )
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+
+        # -------- Training -----------
+        parser.add_argument("--batch_size", type=int, default=8)
+        parser.add_argument("--lr", type=float, default=1e-4)
+
+        # --------- DAFX ------------
+        parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
+        parser.add_argument("--dafx_names", nargs="*")
+        parser.add_argument("--dafx_param_names", nargs="*", default=None)
+
+        # --------- VAE -------------
+        parser.add_argument("--vae_beta", type=float, default=100.)
+        parser.add_argument("--num_channels", type=int, default=1)
+        parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
+        parser.add_argument("--latent_dim", type=int, default=256)
+
+        # ------- Dataset  -----------
+        parser.add_argument("--audio_dir", type=str, default="src/audio")
+        parser.add_argument("--ext", type=str, default="wav")
+        parser.add_argument("--input_dirs", nargs="+", default=['musdb18_24000', 'vctk_24000'])
+        parser.add_argument("--buffer_reload_rate", type=int, default=1000)
+        parser.add_argument("--buffer_size_gb", type=float, default=1.0)
+        parser.add_argument("--sample_rate", type=int, default=24_000)
+        parser.add_argument("--dsp_sample_rate", type=int, default=24_000)
+        parser.add_argument("--shuffle", type=bool, default=True)
+        parser.add_argument("--random_effect_threshold", type=float, default=0.75)
+        parser.add_argument("--train_length", type=int, default=131_072)
+        parser.add_argument("--train_frac", type=float, default=0.9)
+        parser.add_argument("--effect_input", type=bool, default=True)
+        parser.add_argument("--effect_output", type=bool, default=True)
+        parser.add_argument("--half", type=bool, default=False)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=10_000)
+        parser.add_argument("--val_length", type=int, default=131_072)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=100)
+        parser.add_argument("--num_workers", type=int, default=4)
+        parser.add_argument("--dummy_setting", type=bool, default=False)
+
+        return parser

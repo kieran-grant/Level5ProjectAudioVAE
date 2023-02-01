@@ -49,3 +49,30 @@ def is_silent(signal: torch.Tensor):
     mean = np.square(signal).mean()
 
     return mean < 1e-5
+
+
+def audio_to_spectrogram(signal: torch.Tensor,
+                         n_fft: int=4096,
+                         hop_length: int=2048,
+                         window_size: int=4096):
+    window = torch.nn.Parameter(torch.hann_window(window_size))
+
+    # compute spectrogram of waveform
+    X = torch.stft(
+        signal,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        return_complex=True,
+    )
+
+    X_db = torch.pow(X.abs() + 1e-8, 0.3)
+    X_db_norm = X_db
+
+    # standardize (0, 1) 0.322970 0.278452
+    X_db_norm -= 0.322970
+    X_db_norm /= 0.278452
+    X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+
+    return X_db_norm
+

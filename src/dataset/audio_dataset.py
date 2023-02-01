@@ -170,7 +170,11 @@ class AudioDataset(torch.utils.data.Dataset):
         input_audio = utils.peak_normalise(input_audio)
         target_audio = utils.peak_normalise(target_audio)
 
-        return input_audio, target_audio
+        # ------------------------ To Spectrogram ---------------------------
+        input_spectrogram = utils.audio_to_spectrogram(input_audio)
+        target_spectrogram = utils.audio_to_spectrogram(target_audio)
+
+        return input_spectrogram, target_spectrogram
 
     def load_audio_buffer(self):
         self.input_files_loaded = {}  # clear audio buffer
