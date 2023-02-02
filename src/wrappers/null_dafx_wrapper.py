@@ -1,6 +1,6 @@
 import torch
 
-from base_dafx_wrapper import BaseDAFXWrapper
+from src.wrappers.base_dafx_wrapper import BaseDAFXWrapper
 
 
 class NullDAFXWrapper(BaseDAFXWrapper):

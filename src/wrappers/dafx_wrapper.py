@@ -2,7 +2,7 @@ import librosa
 import numpy as np
 import torch
 
-from base_dafx_wrapper import BaseDAFXWrapper
+from src.wrappers.base_dafx_wrapper import BaseDAFXWrapper
 
 import src.utils as utils
 

@@ -7,7 +7,8 @@ from pytorch_lightning.loggers import WandbLogger
 from src.models.vae import SpectrogramVAE
 
 DAFX_TO_USE = [
-    'mda MultiBand',
+    # 'mda MultiBand',
+    'clean'
     # 'mda Overdrive',
     # 'mda Ambience',
     # 'mda Delay',
@@ -43,8 +44,8 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.train_examples_per_epoch = 5_000
-    args.val_examples_per_epoch = 500
+    args.train_examples_per_epoch = 500
+    args.val_examples_per_epoch = 50
 
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
@@ -65,7 +66,7 @@ if __name__ == "__main__":
             # early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=200,
+        max_epochs=3,
         accelerator='gpu',
         log_every_n_steps=1
     )
