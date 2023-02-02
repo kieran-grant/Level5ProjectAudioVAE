@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
@@ -19,11 +19,16 @@ DAFX_TO_USE = [
     # 'mda Limiter'
 ]
 
+SEED = 1234
+
 if __name__ == "__main__":
-    pl.seed_everything(0)
+    pl.seed_everything(SEED)
+    torch.set_float32_matmul_precision('medium')
 
     # callbacks
     wandb_logger = WandbLogger(name='clean_only_vctk', project='l5proj_spectrogram_vae')
+    # wandb_logger = None
+
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     # early_stopping = EarlyStopping(
     #     monitor="val_loss/loss",
@@ -58,8 +63,6 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(
         args,
         # reload_dataloaders_every_n_epochs=1,
-        # check_val_every_n_epoch=1,
-        # val_check_interval=1.,
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
@@ -68,7 +71,6 @@ if __name__ == "__main__":
         num_sanity_val_steps=0,
         max_epochs=200,
         accelerator='gpu',
-        # log_every_n_steps=1
     )
 
     # create the System

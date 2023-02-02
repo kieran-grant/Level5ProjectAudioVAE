@@ -109,15 +109,19 @@ class SpectrogramVAE(pl.LightningModule):
 
     @staticmethod
     def _calculate_kl_loss(mu, log_var):
-        return torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
+        # calculate KL divergence
+        kld_batch = -0.5 * torch.sum(1 + log_var - torch.square(mu) - torch.exp(log_var), dim=1)
+        kld = torch.mean(kld_batch)
+
+        return kld
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":
-            return F.mse_loss(x, x_hat)
+            return F.mse_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "l1":
-            return F.l1_loss(x, x_hat)
+            return F.l1_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "bce":
-            return F.binary_cross_entropy(x, x_hat, reduction='sum')
+            return F.binary_cross_entropy(x, x_hat, reduction="mean")
         else:
             raise NotImplementedError
 
@@ -305,7 +309,7 @@ class SpectrogramVAE(pl.LightningModule):
 
         # -------- Training -----------
         parser.add_argument("--batch_size", type=int, default=8)
-        parser.add_argument("--lr", type=float, default=1e-4)
+        parser.add_argument("--lr", type=float, default=1e-5)
         parser.add_argument("--recon_loss", type=str, default="mse")
         parser.add_argument("--vae_beta", type=float, default=1.)
 
