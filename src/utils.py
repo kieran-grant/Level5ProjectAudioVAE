@@ -138,8 +138,8 @@ def audio_to_spectrogram(signal: torch.Tensor,
     X_db_norm = X_db
 
     # standardize (0, 1) 0.322970 0.278452
-    X_db_norm -= 0.322970
-    X_db_norm /= 0.278452
+    X_db_norm -= 0.334167
+    X_db_norm /= 0.271215
     X_db_norm = X_db_norm.permute(0, 2, 1)
 
     return X_db_norm.detach()

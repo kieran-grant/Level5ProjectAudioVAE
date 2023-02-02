@@ -44,31 +44,31 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.train_examples_per_epoch = 500
-    args.val_examples_per_epoch = 50
+    args.train_examples_per_epoch = 5_000
+    args.val_examples_per_epoch = 500
 
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.effect_input = False
+    args.effect_audio = False
     args.dummy_setting = True
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        reload_dataloaders_every_n_epochs=1,
-        check_val_every_n_epoch=1,
-        val_check_interval=1.,
+        # reload_dataloaders_every_n_epochs=1,
+        # check_val_every_n_epoch=1,
+        # val_check_interval=1.,
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
             # early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=3,
+        max_epochs=200,
         accelerator='gpu',
-        log_every_n_steps=1
+        # log_every_n_steps=1
     )
 
     # create the System

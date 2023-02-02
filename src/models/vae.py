@@ -105,7 +105,6 @@ class SpectrogramVAE(pl.LightningModule):
                                padding=self.hparams.conv_padding,
                                stride=self.hparams.conv_stride
                                ),
-            nn.Sigmoid()
         )
 
     @staticmethod
@@ -252,14 +251,14 @@ class SpectrogramVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        g = torch.Generator()
-        g.manual_seed(0)
+        # g = torch.Generator()
+        # g.manual_seed(0)
 
         return torch.utils.data.DataLoader(
             train_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            generator=g,
+            # generator=g,
             # pin_memory=True,
             # persistent_workers=True,
             timeout=6000,
@@ -286,15 +285,15 @@ class SpectrogramVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        g = torch.Generator()
-        g.manual_seed(0)
+        # g = torch.Generator()
+        # g.manual_seed(0)
 
         return torch.utils.data.DataLoader(
             val_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
             # worker_init_fn=utils.seed_worker,
-            generator=g,
+            # generator=g,
             # pin_memory=True,
             # persistent_workers=True,
             timeout=60,
@@ -307,8 +306,8 @@ class SpectrogramVAE(pl.LightningModule):
         # -------- Training -----------
         parser.add_argument("--batch_size", type=int, default=8)
         parser.add_argument("--lr", type=float, default=1e-4)
-        parser.add_argument("--recon_loss", type=str, default="l1")
-        parser.add_argument("--vae_beta", type=float, default=10.)
+        parser.add_argument("--recon_loss", type=str, default="mse")
+        parser.add_argument("--vae_beta", type=float, default=1.)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
