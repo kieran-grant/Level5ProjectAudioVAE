@@ -23,7 +23,7 @@ if __name__ == "__main__":
     pl.seed_everything(0)
 
     # callbacks
-    wandb_logger = WandbLogger(name='spectrogram_vae_training', project='l5proj_spectrogram_vae')
+    wandb_logger = WandbLogger(name='clean_only_vctk', project='l5proj_spectrogram_vae')
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     # early_stopping = EarlyStopping(
     #     monitor="val_loss/loss",
