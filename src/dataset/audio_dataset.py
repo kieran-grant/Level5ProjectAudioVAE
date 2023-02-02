@@ -45,16 +45,15 @@ class AudioDataset(torch.utils.data.Dataset):
             audio_dir: str,
             input_dirs: List = None,
             subset: str = "train",
-            length: int = 65536,
+            length: int = 131_072,
             train_frac: float = 0.8,
-            val_per: float = 0.1,
+            val_frac: float = 0.1,
             buffer_size_gb: float = 1.0,
-            buffer_reload_rate: float = 1000,
+            buffer_reload_rate: float = 1_000,
             half: bool = False,
-            num_examples_per_epoch: int = 10000,
+            num_examples_per_epoch: int = 10_000,
             random_effect_threshold: float = 0.75,
-            effect_input: bool = True,
-            effect_output: bool = True,
+            effect_audio: bool = True,
             augmentations: dict = None,
             ext: str = "wav",
             dummy_setting: bool = False
@@ -69,14 +68,13 @@ class AudioDataset(torch.utils.data.Dataset):
         self.subset = subset
         self.length = length
         self.train_frac = train_frac
-        self.val_per = val_per
+        self.val_frac = val_frac
         self.buffer_size_gb = buffer_size_gb
         self.buffer_reload_rate = buffer_reload_rate
         self.half = half
         self.num_examples_per_epoch = num_examples_per_epoch
         self.random_effect_threshold = random_effect_threshold
-        self.effect_input = effect_input
-        self.effect_output = effect_output
+        self.effect_audio = effect_audio
         self.augmentations = augmentations
         self.ext = ext
         self.dummy_setting = dummy_setting
@@ -155,26 +153,22 @@ class AudioDataset(torch.utils.data.Dataset):
             self.load_audio_buffer()
 
         # generate pairs for style training
-        input_audio, target_audio = self.generate_pair()
+        audio = self.generate_audio()
 
         # ------------------------ Conform length of files -------------------
-        input_audio = utils.conform_length(input_audio, int(self.length))
-        target_audio = utils.conform_length(target_audio, int(self.length))
+        audio = utils.conform_length(audio, int(self.length))
 
         # ------------------------ Apply fade in and fade out -------------------
-        input_audio = utils.linear_fade(input_audio, sample_rate=self.sample_rate)
-        target_audio = utils.linear_fade(target_audio, sample_rate=self.sample_rate)
+        audio = utils.linear_fade(audio, sample_rate=self.sample_rate)
 
         # ------------------------ Final normalization ----------------------
         # always peak normalize final input/target to -12 dBFS
-        input_audio = utils.peak_normalise(input_audio)
-        target_audio = utils.peak_normalise(target_audio)
+        audio = utils.peak_normalise(audio)
 
         # ------------------------ To Spectrogram ---------------------------
-        input_spectrogram = utils.audio_to_spectrogram(input_audio)
-        target_spectrogram = utils.audio_to_spectrogram(target_audio)
+        spectrogram = utils.audio_to_spectrogram(audio)
 
-        return input_spectrogram, target_spectrogram
+        return spectrogram
 
     def load_audio_buffer(self):
         self.input_files_loaded = {}  # clear audio buffer
@@ -205,7 +199,7 @@ class AudioDataset(torch.utils.data.Dataset):
             if nbytes_loaded > self.buffer_size_gb * 1e9:
                 break
 
-    def generate_pair(self):
+    def generate_audio(self):
         # ------------------------ Input audio ----------------------
         rand_input_file_id = None
         input_file = None
@@ -252,33 +246,19 @@ class AudioDataset(torch.utils.data.Dataset):
 
         input_audio_corrupt = input_audio_aug.clone()
 
-        if self.effect_input and torch.rand(1).sum() < 0.75:
+        if self.dummy_setting:
+            input_audio_corrupt = self.dafx.process_audio_with_dummy_settings(input_audio_corrupt)
+        elif self.effect_audio:
             input_audio_corrupt = self.dafx.process_audio_with_random_settings(input_audio_aug,
                                                                                threshold=self.random_effect_threshold)
         # peak normalize again
         input_audio_corrupt = utils.peak_normalise(input_audio_corrupt)  # with min 3 dBFS headroom
 
-        # ------------------------ Target audio ----------------------
-        # use the same augmented audio clip, add different DAFX setting
-        target_audio_corrupt = input_audio_aug.clone()
-
-        if self.dummy_setting:
-            target_audio_corrupt = self.dafx.process_audio_with_dummy_settings(target_audio_corrupt)
-        elif self.effect_output and torch.rand(1).sum() < 0.9:
-            target_audio_corrupt = self.dafx.process_audio_with_random_settings(target_audio_corrupt,
-                                                                                threshold=self.random_effect_threshold)
-
-        # peak normalize again
-        target_audio_corrupt = utils.peak_normalise(target_audio_corrupt)  # with min 3 dBFS headroom
-
         # make correct shape
         if len(input_audio_corrupt.shape) == 1:
             input_audio_corrupt = input_audio_corrupt[None, :]
 
-        if len(target_audio_corrupt.shape) == 1:
-            target_audio_corrupt = target_audio_corrupt[None, :]
-
-        return input_audio_corrupt, target_audio_corrupt
+        return input_audio_corrupt
 
     @staticmethod
     def get_random_file_id(keys):

@@ -36,19 +36,34 @@ class SpectrogramVAE(pl.LightningModule):
 
     def _build_encoder(self):
         self.enc_conv1 = nn.Sequential(
-            nn.Conv2d(self.hparams.num_channels, 8, kernel_size=3, padding=1, stride=2),
+            nn.Conv2d(in_channels=self.hparams.num_channels,
+                      out_channels=8,
+                      kernel_size=self.hparams.conv_kernel,
+                      padding=self.hparams.conv_padding,
+                      stride=self.hparams.conv_stride
+                      ),
             nn.ReLU(),
             nn.BatchNorm2d(8)
         )
 
         self.enc_conv2 = nn.Sequential(
-            nn.Conv2d(8, 16, kernel_size=3, padding=1, stride=2),
+            nn.Conv2d(in_channels=8,
+                      out_channels=16,
+                      kernel_size=self.hparams.conv_kernel,
+                      padding=self.hparams.conv_padding,
+                      stride=self.hparams.conv_stride
+                      ),
             nn.ReLU(),
             nn.BatchNorm2d(16),
         )
 
         self.enc_conv3 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=3, padding=1, stride=2),
+            nn.Conv2d(in_channels=16,
+                      out_channels=32,
+                      kernel_size=self.hparams.conv_kernel,
+                      padding=self.hparams.conv_padding,
+                      stride=self.hparams.conv_stride
+                      ),
             nn.ReLU(),
             nn.BatchNorm2d(32),
         )
@@ -62,20 +77,34 @@ class SpectrogramVAE(pl.LightningModule):
             nn.ReLU())
 
         self.dec_conv1 = nn.Sequential(
-            nn.ConvTranspose2d(32, 16, kernel_size=3, padding=1, stride=2),
+            nn.ConvTranspose2d(in_channels=32,
+                               out_channels=16,
+                               kernel_size=self.hparams.conv_kernel,
+                               padding=self.hparams.conv_padding,
+                               stride=self.hparams.conv_stride
+                               ),
             nn.ReLU(),
             nn.BatchNorm2d(16)
         )
 
         self.dec_conv2 = nn.Sequential(
-            nn.ConvTranspose2d(16, 8, kernel_size=3, padding=1, stride=2),
+            nn.ConvTranspose2d(in_channels=16,
+                               out_channels=8,
+                               kernel_size=self.hparams.conv_kernel,
+                               padding=self.hparams.conv_padding,
+                               stride=self.hparams.conv_stride
+                               ),
             nn.ReLU(),
             nn.BatchNorm2d(8),
         )
 
         self.dec_conv3 = nn.Sequential(
-            nn.ConvTranspose2d(8, self.hparams.num_channels, kernel_size=3, padding=1, stride=2),
-            nn.BatchNorm2d(1),
+            nn.ConvTranspose2d(in_channels=8,
+                               out_channels=self.hparams.num_channels,
+                               kernel_size=self.hparams.conv_kernel,
+                               padding=self.hparams.conv_padding,
+                               stride=self.hparams.conv_stride
+                               ),
             nn.Sigmoid()
         )
 
@@ -161,33 +190,24 @@ class SpectrogramVAE(pl.LightningModule):
             train: bool = False,
     ):
         # Get spectrograms
-        _, y = batch
+        x = batch
 
         # Get reconstruction as well as mu, var
-        # x_hat, x_mu, x_log_var = self(x)
-        y_hat, y_mu, y_log_var = self(y)
+        x_hat, x_mu, x_log_var = self(x)
 
         # Calculate recon losses for clean/effected signals
-        # x_recon_loss = self._calculate_reconstruction_loss(x, x_hat)
-        # x_kld = self._calculate_kl_loss(x_mu, x_log_var)
-
-        y_recon_loss = self._calculate_reconstruction_loss(y, y_hat)
-        y_kld = self._calculate_kl_loss(y_mu, y_log_var)
+        recon_loss = self._calculate_reconstruction_loss(x, x_hat)
+        kld = self._calculate_kl_loss(x_mu, x_log_var)
 
         # Total loss is additive
-        # x_loss = x_recon_loss + (self.hparams.vae_beta * x_kld)
-        y_loss = y_recon_loss + (self.hparams.vae_beta * y_kld)
-
-        # loss = x_loss + y_loss
+        loss = recon_loss + (self.hparams.vae_beta * kld)
 
         # log the losses
-        self.log(("train" if train else "val") + "_loss/loss", y_loss)
-        # self.log(("train" if train else "val") + "_loss/x_reconstruction_loss", x_recon_loss)
-        # self.log(("train" if train else "val") + "_loss/x_kl_divergence", x_kld)
-        self.log(("train" if train else "val") + "_loss/y_reconstruction_loss", y_recon_loss)
-        self.log(("train" if train else "val") + "_loss/y_kl_divergence", y_kld)
+        self.log(("train" if train else "val") + "_loss/loss", loss)
+        self.log(("train" if train else "val") + "_loss/reconstruction_loss", recon_loss)
+        self.log(("train" if train else "val") + "_loss/kl_divergence", kld)
 
-        return y_loss
+        return loss
 
     def training_step(self, batch, batch_idx):
         loss = self.common_paired_step(
@@ -222,8 +242,7 @@ class SpectrogramVAE(pl.LightningModule):
             buffer_size_gb=self.hparams.buffer_size_gb,
             buffer_reload_rate=self.hparams.buffer_reload_rate,
             num_examples_per_epoch=self.hparams.train_examples_per_epoch,
-            effect_input=self.hparams.effect_input,
-            effect_output=self.hparams.effect_output,
+            effect_audio=self.hparams.effect_audio,
             random_effect_threshold=self.hparams.random_effect_threshold,
             augmentations={
                 "pitch": {"sr": self.hparams.sample_rate},
@@ -260,8 +279,7 @@ class SpectrogramVAE(pl.LightningModule):
             buffer_size_gb=self.hparams.buffer_size_gb,
             buffer_reload_rate=self.hparams.buffer_reload_rate,
             num_examples_per_epoch=self.hparams.train_examples_per_epoch,
-            effect_input=self.hparams.effect_input,
-            effect_output=self.hparams.effect_output,
+            effect_audio=self.hparams.effect_audio,
             random_effect_threshold=self.hparams.random_effect_threshold,
             augmentations={},
             ext=self.hparams.ext,
@@ -301,6 +319,9 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--num_channels", type=int, default=1)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
         parser.add_argument("--latent_dim", type=int, default=1024)
+        parser.add_argument("--conv_kernel", type=int, default=3)
+        parser.add_argument("--conv_padding", type=int, default=1)
+        parser.add_argument("--conv_stride", type=int, default=2)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
@@ -314,8 +335,7 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--random_effect_threshold", type=float, default=0.75)
         parser.add_argument("--train_length", type=int, default=131_072)
         parser.add_argument("--train_frac", type=float, default=0.9)
-        parser.add_argument("--effect_input", type=bool, default=True)
-        parser.add_argument("--effect_output", type=bool, default=True)
+        parser.add_argument("--effect_audio", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
         parser.add_argument("--train_examples_per_epoch", type=int, default=10_000)
         parser.add_argument("--val_length", type=int, default=131_072)
