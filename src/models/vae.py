@@ -10,6 +10,7 @@ import pytorch_lightning as pl
 
 from src.dataset.audio_dataset import AudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
+from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
 
 
 class SpectrogramVAE(pl.LightningModule):
@@ -96,8 +97,11 @@ class SpectrogramVAE(pl.LightningModule):
         dafx_instances = []
 
         for dafx_name in self.hparams.dafx_names:
-            dafx = load_plugin(self.hparams.dafx_file, plugin_name=dafx_name)
-            dafx_instances.append(DAFXWrapper(dafx, sample_rate=self.hparams.sample_rate))
+            if dafx_name.lower() == "clean":
+                dafx_instances.append(NullDAFXWrapper())
+            else:
+                dafx = load_plugin(self.hparams.dafx_file, plugin_name=dafx_name)
+                dafx_instances.append(DAFXWrapper(dafx, sample_rate=self.hparams.sample_rate))
 
         return dafx_instances
 

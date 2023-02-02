@@ -2,10 +2,12 @@ import librosa
 import numpy as np
 import torch
 
+from base_dafx_wrapper import BaseDAFXWrapper
+
 import src.utils as utils
 
 
-class DAFXWrapper:
+class DAFXWrapper(BaseDAFXWrapper):
     def __init__(self, dafx, sample_rate, param_names=None):
         """
         Wrapper for Pedalboard VST3 to add useful helper methods
