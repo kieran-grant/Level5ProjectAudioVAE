@@ -30,11 +30,11 @@ if __name__ == "__main__":
     # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
-    # early_stopping = EarlyStopping(
-    #     monitor="val_loss/loss",
-    #     mode="min",
-    #     # should cycle through all effects at least twice before early stopping
-    #     patience=len(DAFX_TO_USE) * 2)
+    early_stopping = EarlyStopping(
+        monitor="val_loss/loss",
+        mode="min",
+        # should cycle through all effects at least twice before early stopping
+        patience=20)
 
     # arg parse for config
     parser = ArgumentParser()
@@ -59,6 +59,9 @@ if __name__ == "__main__":
     args.effect_audio = False
     args.dummy_setting = True
 
+    args.vae_beta = 1e-4
+    args.lr = 1e-4
+
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
@@ -66,10 +69,10 @@ if __name__ == "__main__":
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
-            # early_stopping
+            early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=200,
+        max_epochs=100,
         accelerator='gpu',
     )
 

@@ -68,12 +68,21 @@ class SpectrogramVAE(pl.LightningModule):
             nn.BatchNorm2d(32),
         )
 
-        self.mu = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
-        self.log_var = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
+        self.enc_linear = nn.Sequential(
+            nn.Linear(self.hidden_dim_enc, self.hparams.linear_layer_dim),
+            nn.ReLU()
+        )
+
+        self.mu = nn.Linear(self.hparams.linear_layer_dim, self.hparams.latent_dim)
+        self.log_var = nn.Linear(self.hparams.linear_layer_dim, self.hparams.latent_dim)
 
     def _build_decoder(self):
-        self.dec_hidden = nn.Sequential(
-            nn.Linear(in_features=self.hparams.latent_dim, out_features=self.hidden_dim_enc),
+        self.dec_hidden1 = self.dec_hidden = nn.Sequential(
+            nn.Linear(in_features=self.hparams.latent_dim, out_features=self.hparams.linear_layer_dim),
+            nn.ReLU())
+
+        self.dec_hidden2 = nn.Sequential(
+            nn.Linear(in_features=self.hparams.linear_layer_dim, out_features=self.hidden_dim_enc),
             nn.ReLU())
 
         self.dec_conv1 = nn.Sequential(
@@ -108,9 +117,9 @@ class SpectrogramVAE(pl.LightningModule):
         )
 
     @staticmethod
-    def _calculate_kl_loss(mu, log_var):
+    def _calculate_kl_loss(mean, log_variance):
         # calculate KL divergence
-        kld_batch = -0.5 * torch.sum(1 + log_var - torch.square(mu) - torch.exp(log_var), dim=1)
+        kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
         kld = torch.mean(kld_batch)
 
         return kld
@@ -124,6 +133,11 @@ class SpectrogramVAE(pl.LightningModule):
             return F.binary_cross_entropy(x, x_hat, reduction="mean")
         else:
             raise NotImplementedError
+
+    def calculate_loss(self, mean, log_variance, predictions, targets):
+        r_loss = self._calculate_reconstruction_loss(targets, predictions)
+        kl_loss = self._calculate_kl_loss(mean, log_variance)
+        return r_loss, kl_loss
 
     def _get_dafx_from_names(self):
         dafx_instances = []
@@ -154,13 +168,15 @@ class SpectrogramVAE(pl.LightningModule):
 
         x = x.view(-1, self.hidden_dim_enc)
 
+        x = self.enc_linear(x)
         mu = self.mu(x)
         log_var = self.log_var(x)
 
         return mu, log_var
 
     def decode(self, z):
-        x = self.dec_hidden(z)
+        x = self.dec_hidden1(z)
+        x = self.dec_hidden2(x)
 
         x = x.view(-1, *self.hidden_dim_dec)
 
@@ -199,16 +215,15 @@ class SpectrogramVAE(pl.LightningModule):
         x_hat, x_mu, x_log_var = self(x)
 
         # Calculate recon losses for clean/effected signals
-        recon_loss = self._calculate_reconstruction_loss(x, x_hat)
-        kld = self._calculate_kl_loss(x_mu, x_log_var)
+        r_loss, kl_loss = self.calculate_loss(x_mu, x_log_var, x_hat, x)
 
         # Total loss is additive
-        loss = recon_loss + (self.hparams.vae_beta * kld)
+        loss = r_loss + (self.hparams.vae_beta * kl_loss)
 
         # log the losses
         self.log(("train" if train else "val") + "_loss/loss", loss)
-        self.log(("train" if train else "val") + "_loss/reconstruction_loss", recon_loss)
-        self.log(("train" if train else "val") + "_loss/kl_divergence", kld)
+        self.log(("train" if train else "val") + "_loss/reconstruction_loss", r_loss)
+        self.log(("train" if train else "val") + "_loss/kl_divergence", kl_loss)
 
         return loss
 
@@ -321,6 +336,7 @@ class SpectrogramVAE(pl.LightningModule):
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
+        parser.add_argument("--linear_layer_dim", type=int, default=1024)
         parser.add_argument("--latent_dim", type=int, default=1024)
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
