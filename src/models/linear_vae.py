@@ -133,7 +133,7 @@ class LinearVAE(pl.LightningModule):
         z = self.reparameterise(mu, log_var)
         out = self.decode(z)
 
-        return out, mu, log_var
+        return out, mu, log_var, z
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
@@ -149,7 +149,7 @@ class LinearVAE(pl.LightningModule):
         x = torch.flatten(x, start_dim=1)
 
         # Get reconstruction as well as mu, var
-        x_hat, x_mu, x_log_var = self(x)
+        x_hat, x_mu, x_log_var, _ = self(x)
 
         # Calculate recon losses for clean/effected signals
         r_loss, kl_loss = self.calculate_loss(x_mu, x_log_var, x_hat, x)
@@ -207,17 +207,11 @@ class LinearVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             train_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
-            timeout=6000,
+            timeout=60,
         )
 
     def val_dataloader(self):
@@ -241,17 +235,10 @@ class LinearVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             val_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # worker_init_fn=utils.seed_worker,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
             timeout=60,
         )
 

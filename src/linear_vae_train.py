@@ -61,13 +61,16 @@ if __name__ == "__main__":
     args.effect_audio = False
     args.dummy_setting = True
 
-    args.vae_beta = 1e-4
+    args.vae_beta = 0
     args.lr = 1e-4
+
+    args.hidden_layer_dims = [1024, 1024, 1024]
+    args.latent_space_dim = 1024
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        # reload_dataloaders_every_n_epochs=1,
+        reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
