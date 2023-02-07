@@ -188,13 +188,11 @@ class StyleTransferVAE(pl.LightningModule):
         x_s = self.audio_to_spectrogram(signal=x,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
-                                        return_complex=self.hparams.return_complex
                                         )
 
         y_s = self.audio_to_spectrogram(signal=y,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
-                                        return_complex=self.hparams.return_complex
                                         )
 
         X = torch.concat([x_s, y_s], dim=1)
@@ -219,21 +217,9 @@ class StyleTransferVAE(pl.LightningModule):
                              signal: torch.Tensor,
                              n_fft: int = 4096,
                              hop_length: int = 2048,
-                             return_complex: bool = True):
+                             window_size: int = 4096):
 
         bs, _, _ = signal.size()
-
-        if return_complex:
-            # compute spectrogram of waveform
-            X = torch.stft(
-                signal.view(bs, -1),
-                n_fft=n_fft,
-                hop_length=hop_length,
-                window=self.window,
-                return_complex=False,
-            )
-
-            return X.permute(0, 3, 2, 1)
 
         X = torch.stft(
             signal.view(bs, -1),
@@ -243,9 +229,27 @@ class StyleTransferVAE(pl.LightningModule):
             return_complex=True,
         )
 
-        X_abs = X.abs().unsqueeze(1).permute(0, 1, 3, 2)
+        # Absolute value part
+        X_db = torch.pow(X.abs() + 1e-8, 0.3)
+        X_db_norm = X_db
 
-        return X_abs
+        # Normalise (0,1)
+        X_db_norm -= 0.3352797
+        X_db_norm /= 0.2745147
+
+        X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+
+        # Angle part
+        X_phase = torch.angle(X)
+        X_phase_norm = X_phase
+
+        # Normalise (0,1)
+        X_phase_norm -= 0.0025563
+        X_phase_norm /= 1.8219221
+
+        X_phase = X_phase.unsqueeze(1).permute(0, 1, 3, 2)
+
+        return torch.concat([X_db_norm, X_phase], dim=1)
 
     def training_step(self, batch, batch_idx):
         loss = self.common_paired_step(
@@ -385,9 +389,9 @@ class StyleTransferVAE(pl.LightningModule):
         parser.add_argument("--effect_input", type=bool, default=True)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=10_000)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=131_072)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=100)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
         parser.add_argument("--num_workers", type=int, default=4)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 

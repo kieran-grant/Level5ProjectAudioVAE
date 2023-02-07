@@ -6,12 +6,14 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.style_transfer_vae import StyleTransferVAE
 
+from torchsummary import summary
+
 DAFX_TO_USE = [
     # 'mda MultiBand',
     'clean',
-    'mda Overdrive',
-    # 'mda Ambience',
-    'mda Delay',
+    # 'mda Overdrive',
+    # # 'mda Ambience',
+    # 'mda Delay',
     # 'mda Leslie',
     # 'mda Combo',
     # 'mda Thru-Zero Flanger',
@@ -49,18 +51,16 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.train_examples_per_epoch = 5_000
-    args.val_examples_per_epoch = 500
-
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.effect_audio = False
+    args.effect_input = False
+    args.effect_output = True
     args.dummy_setting = True
 
-    args.vae_beta = 1e-4
-    args.lr = 1e-4
+    args.vae_beta = 5e-4
+    args.lr = 1e-3
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=100,
+        max_epochs=20,
         accelerator='gpu',
     )
 
