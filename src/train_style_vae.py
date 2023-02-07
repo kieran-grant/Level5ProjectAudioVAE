@@ -34,8 +34,7 @@ if __name__ == "__main__":
     early_stopping = EarlyStopping(
         monitor="val_loss/loss",
         mode="min",
-        # should cycle through all effects at least twice before early stopping
-        patience=20)
+        patience=40)
 
     # arg parse for config
     parser = ArgumentParser()
@@ -61,8 +60,8 @@ if __name__ == "__main__":
 
     args.num_channels = 2
 
-    args.vae_beta = 5e-4
-    args.lr = 1e-3
+    args.vae_beta = 0.1
+    args.lr = 5e-4
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
