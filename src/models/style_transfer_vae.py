@@ -36,7 +36,7 @@ class StyleTransferVAE(pl.LightningModule):
         self.hidden_dim_enc = prod(self.hparams.hidden_dim)
         self.hidden_dim_dec = self.hparams.hidden_dim
 
-        channels = [self.hparams.num_channels, 8, 16, 32]
+        channels = [self.hparams.num_channels, 8, 16, 32, 32]
         self.enc_channels = channels
         self.dec_channels = channels[::-1]
 
@@ -75,23 +75,23 @@ class StyleTransferVAE(pl.LightningModule):
 
         for i in range(len(self.dec_channels) - 2):
             conv_layers.append(nn.Sequential(
-                nn.Conv2d(in_channels=self.dec_channels[i],
-                          out_channels=self.dec_channels[i + 1],
-                          kernel_size=self.hparams.conv_kernel,
-                          padding=self.hparams.conv_padding,
-                          stride=self.hparams.conv_stride
-                          ),
+                nn.ConvTranspose2d(in_channels=self.dec_channels[i],
+                                   out_channels=self.dec_channels[i + 1],
+                                   kernel_size=self.hparams.conv_kernel,
+                                   padding=self.hparams.conv_padding,
+                                   stride=self.hparams.conv_stride
+                                   ),
                 nn.ReLU(),
                 nn.BatchNorm2d(self.dec_channels[i + 1])
             ))
 
         conv_layers.append(nn.Sequential(
-            nn.Conv2d(in_channels=self.dec_channels[-2],
-                      out_channels=self.dec_channels[-1],
-                      kernel_size=self.hparams.conv_kernel,
-                      padding=self.hparams.conv_padding,
-                      stride=self.hparams.conv_stride
-                      )))
+            nn.ConvTranspose2d(in_channels=self.dec_channels[-2],
+                               out_channels=self.dec_channels[-1],
+                               kernel_size=self.hparams.conv_kernel,
+                               padding=self.hparams.conv_padding,
+                               stride=self.hparams.conv_stride
+                               )))
 
         self.decoder_conv = nn.Sequential(*conv_layers)
 
@@ -143,7 +143,7 @@ class StyleTransferVAE(pl.LightningModule):
     def encode(self, x):
         x = self.encoder_conv(x)
 
-        x = x.view(-1, self.hidden_dim_enc)
+        x = x.reshape(-1, self.hidden_dim_enc)
 
         mu = self.mu(x)
         log_var = self.log_var(x)
@@ -170,7 +170,7 @@ class StyleTransferVAE(pl.LightningModule):
         z = self.reparameterise(mu, log_var)
         out = self.decode(z)
 
-        return out, mu, log_var
+        return out, mu, log_var, z
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
@@ -200,7 +200,7 @@ class StyleTransferVAE(pl.LightningModule):
         X = torch.concat([x_s, y_s], dim=1)
 
         # Get reconstruction as well as mu, var
-        X_hat, X_mu, X_log_var = self(X)
+        X_hat, X_mu, X_log_var, _ = self(X)
 
         # Calculate recon losses for clean/effected signals
         r_loss, kl_loss = self.calculate_loss(X_mu, X_log_var, X_hat, X)
@@ -357,12 +357,12 @@ class StyleTransferVAE(pl.LightningModule):
 
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=4)
-        parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
+        parser.add_argument("--hidden_dim", nargs="*", default=(32, 5, 129))
         parser.add_argument("--linear_layer_dim", type=int, default=1024)
         parser.add_argument("--latent_dim", type=int, default=1024)
-        parser.add_argument("--conv_kernel", type=int, default=5)
+        parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
-        parser.add_argument("--conv_stride", type=int, default=3)
+        parser.add_argument("--conv_stride", type=int, default=2)
 
         # -------- Spectrogram ----------
         parser.add_argument("--n_fft", type=int, default=4096)

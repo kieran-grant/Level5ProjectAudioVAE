@@ -26,8 +26,8 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    # wandb_logger = WandbLogger(name='clean_only_vctk', project='l5proj_style_vae')
-    wandb_logger = None
+    wandb_logger = WandbLogger(name='clean_only_vctk', project='l5proj_style_vae')
+    # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     early_stopping = EarlyStopping(
