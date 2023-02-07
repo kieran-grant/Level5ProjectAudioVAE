@@ -1,19 +1,18 @@
 from argparse import ArgumentParser
-import torch
+
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
 from src.models.style_transfer_vae import StyleTransferVAE
 
-from torchsummary import summary
-
 DAFX_TO_USE = [
     # 'mda MultiBand',
     'clean',
-    # 'mda Overdrive',
+    'mda Overdrive',
     # # 'mda Ambience',
-    # 'mda Delay',
+    'mda Delay',
     # 'mda Leslie',
     # 'mda Combo',
     # 'mda Thru-Zero Flanger',
@@ -28,7 +27,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='clean_only_vctk', project='l5proj_style_vae')
+    wandb_logger = WandbLogger(name='vctk_2dafx_plus_clean', project='l5proj_style_vae')
     # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
@@ -58,6 +57,9 @@ if __name__ == "__main__":
     args.effect_input = False
     args.effect_output = True
     args.dummy_setting = True
+    args.return_phase = False
+
+    args.num_channels = 2
 
     args.vae_beta = 5e-4
     args.lr = 1e-3
@@ -65,14 +67,14 @@ if __name__ == "__main__":
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        # reload_dataloaders_every_n_epochs=1,
+        reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
             early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=20,
+        max_epochs=300,
         accelerator='gpu',
     )
 

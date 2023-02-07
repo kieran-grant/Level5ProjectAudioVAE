@@ -188,12 +188,12 @@ class StyleTransferVAE(pl.LightningModule):
         x_s = self.audio_to_spectrogram(signal=x,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
-                                        )
+                                        return_phase=self.hparams.return_phase)
 
         y_s = self.audio_to_spectrogram(signal=y,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
-                                        )
+                                        return_phase=self.hparams.return_phase)
 
         X = torch.concat([x_s, y_s], dim=1)
 
@@ -217,7 +217,7 @@ class StyleTransferVAE(pl.LightningModule):
                              signal: torch.Tensor,
                              n_fft: int = 4096,
                              hop_length: int = 2048,
-                             window_size: int = 4096):
+                             return_phase=True):
 
         bs, _, _ = signal.size()
 
@@ -238,6 +238,9 @@ class StyleTransferVAE(pl.LightningModule):
         X_db_norm /= 0.2745147
 
         X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+
+        if not return_phase:
+            return X_db_norm
 
         # Angle part
         X_phase = torch.angle(X)
@@ -295,16 +298,10 @@ class StyleTransferVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             train_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
             timeout=6000,
         )
 
@@ -330,17 +327,10 @@ class StyleTransferVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             val_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # worker_init_fn=utils.seed_worker,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
             timeout=60,
         )
 
@@ -360,7 +350,8 @@ class StyleTransferVAE(pl.LightningModule):
         parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
         # --------- VAE -------------
-        parser.add_argument("--num_channels", type=int, default=4)
+        # Use 2 channels if return_phase is False, otherwise use 4
+        parser.add_argument("--num_channels", type=int, default=2)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 5, 129))
         parser.add_argument("--linear_layer_dim", type=int, default=1024)
         parser.add_argument("--latent_dim", type=int, default=1024)
@@ -372,7 +363,7 @@ class StyleTransferVAE(pl.LightningModule):
         parser.add_argument("--n_fft", type=int, default=4096)
         parser.add_argument("--hop_length", type=int, default=2048)
         parser.add_argument("--window_size", type=int, default=4096)
-        parser.add_argument("--return_complex", type=bool, default=True)
+        parser.add_argument("--return_phase", type=bool, default=False)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
