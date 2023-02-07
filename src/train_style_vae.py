@@ -60,8 +60,8 @@ if __name__ == "__main__":
 
     args.num_channels = 2
 
-    args.vae_beta = 0.1
-    args.lr = 5e-4
+    args.vae_beta = 1e-4
+    args.lr = 1e-4
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
