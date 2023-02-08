@@ -98,14 +98,16 @@ class StyleTransferVAE(pl.LightningModule):
     @staticmethod
     def _calculate_kl_loss(mean, log_variance):
         # calculate KL divergence
-        kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
-        kld = torch.mean(kld_batch)
+        # kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
+        # kld = torch.mean(kld_batch)
+
+        kld = (0.5 * (mean ** 2 + torch.exp(log_variance) - log_variance - 1)).sum()
 
         return kld
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":
-            return F.mse_loss(x, x_hat, reduction="mean")
+            return F.mse_loss(x, x_hat, reduction="sum")
         elif self.hparams.recon_loss.lower() == "l1":
             return F.l1_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "bce":
@@ -353,8 +355,7 @@ class StyleTransferVAE(pl.LightningModule):
         # Use 2 channels if return_phase is False, otherwise use 4
         parser.add_argument("--num_channels", type=int, default=2)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 5, 129))
-        parser.add_argument("--linear_layer_dim", type=int, default=1024)
-        parser.add_argument("--latent_dim", type=int, default=1024)
+        parser.add_argument("--latent_dim", type=int, default=2048)
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
         parser.add_argument("--conv_stride", type=int, default=2)

@@ -9,7 +9,7 @@ from src.models.style_transfer_vae import StyleTransferVAE
 
 DAFX_TO_USE = [
     # 'mda MultiBand',
-    'clean',
+    # 'clean',
     'mda Overdrive',
     # # 'mda Ambience',
     'mda Delay',
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vctk_2dafx_plus_clean', project='l5proj_style_vae')
+    wandb_logger = WandbLogger(name='vctk_2dafx_no_clean', project='l5proj_style_vae')
     # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
@@ -59,9 +59,10 @@ if __name__ == "__main__":
     args.return_phase = False
 
     args.num_channels = 2
+    args.latent_dim = 2048
 
-    args.vae_beta = 1e-4
-    args.lr = 1e-4
+    args.vae_beta = 5e-4
+    args.lr = 3e-4
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
