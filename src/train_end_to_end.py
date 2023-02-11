@@ -3,6 +3,8 @@ from argparse import ArgumentParser
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from src.callbacks.audio import LogAudioCallback
+
 from pytorch_lightning.loggers import WandbLogger
 
 from src.models.end_to_end import EndToEndSystem
@@ -14,8 +16,8 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    # wandb_logger = WandbLogger(name='vctk_2dafx_no_clean_dummy', project='l5proj_end2end')
-    wandb_logger = None
+    wandb_logger = WandbLogger(name='vctk_2dafx_no_clean_dummy', project='l5proj_end2end')
+    # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     early_stopping = EarlyStopping(
@@ -49,8 +51,26 @@ if __name__ == "__main__":
 
     args.latent_dim = 2048
 
+    args.train_examples_per_epoch=100
+    args.val_examples_per_epoch=10
+
     args.lr = 3e-4
-    args.max_epochs = 20
+    args.max_epochs = 3
+
+    # Checkpoint on the first reconstruction loss
+    args.train_monitor = f"train_loss/{args.recon_losses[-1]}"
+    args.val_monitor = f"val_loss/{args.recon_losses[-1]}"
+
+    dataset_str = [f"{str(i).strip('_')}_" for i in args.input_dirs]
+
+    train_checkpoint = pl.callbacks.ModelCheckpoint(
+            monitor=args.train_monitor,
+            filename="{epoch}-{step}-train-" + f"{dataset_str}",
+        )
+    val_checkpoint = pl.callbacks.ModelCheckpoint(
+        monitor=args.val_monitor,
+        filename="{epoch}-{step}-val-" + f"{dataset_str}",
+    )
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -58,7 +78,9 @@ if __name__ == "__main__":
         # reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
-            checkpoint_callback,
+            LogAudioCallback(),
+            train_checkpoint,
+            val_checkpoint,
             early_stopping
         ],
         num_sanity_val_steps=0,

@@ -230,10 +230,20 @@ class EndToEndSystem(pl.LightningModule):
             sync_dist=True,
         )
 
-        return loss
+        # store audio data
+        data_dict = {
+            "x": x.cpu(),
+            "y": y.cpu(),
+            "y_ref": y_ref.cpu(),
+            "p": p.cpu(),
+            "z": z.cpu(),
+            "y_hat": y_hat.cpu(),
+        }
+
+        return loss, data_dict
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
-        loss = self.common_paired_step(
+        loss, _ = self.common_paired_step(
             batch,
             batch_idx,
             optimizer_idx,
@@ -243,14 +253,14 @@ class EndToEndSystem(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx, optimizer_idx=0):
-        loss = self.common_paired_step(
+        loss, data_dict = self.common_paired_step(
             batch,
             batch_idx,
             optimizer_idx,
             train=False,
         )
 
-        return loss
+        return data_dict
 
     def optimizer_step(
             self,
@@ -260,7 +270,6 @@ class EndToEndSystem(pl.LightningModule):
             optimizer_idx,
             optimizer_closure,
             on_tpu=False,
-            using_native_amp=False,
             using_lbfgs=False,
     ):
         if optimizer_idx == 0:
@@ -376,7 +385,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--batch_size", type=int, default=16)
         parser.add_argument("--lr", type=float, default=3e-4)
         parser.add_argument("--lr_patience", type=int, default=20)
-        parser.add_argument("--recon_losses", nargs="+", default=["mrsft", "l1"])
+        parser.add_argument("--recon_losses", nargs="+", default=["mrstft", "l1"])
         parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0, 100.0])
 
         # --------- DAFX ------------
