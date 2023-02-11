@@ -177,7 +177,7 @@ class EndToEndSystem(pl.LightningModule):
         p = torch.sigmoid(p_logits)
 
         # Process audio conditioned on parameters
-        y_hat = self.dafx_layer([x, p])
+        y_hat = self.dafx_layer([x, p]).unsqueeze(1)
 
         return y_hat, p, z
 
@@ -239,7 +239,7 @@ class EndToEndSystem(pl.LightningModule):
             batch,
             batch_idx,
             optimizer_idx,
-            train=True,
+            train=False,
         )
 
         return loss
