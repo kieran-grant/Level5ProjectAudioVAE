@@ -85,6 +85,9 @@ class LogAudioCallback(pl.callbacks.Callback):
 
         # log final mean metrics
         for metric_name, metric in metrics.items():
+            if len(metric) == 0:
+                continue
+
             val = np.mean(metric)
             trainer.logger.experiment.log(
                 {

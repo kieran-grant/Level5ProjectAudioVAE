@@ -19,7 +19,6 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(name='vctk_2dafx_no_clean_dummy', project='l5proj_end2end')
     # wandb_logger = None
 
-    checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     early_stopping = EarlyStopping(
         monitor="val_loss/loss",
         mode="min",
@@ -42,31 +41,32 @@ if __name__ == "__main__":
     args.dafx_name = "mda Overdrive"
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.audio_encoder_ckpt = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/ync68xdq/checkpoints/epoch=193-step=121250.ckpt"
+    args.audio_encoder_ckpt = \
+        "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/ync68xdq/checkpoints/epoch=193-step=121250.ckpt"
 
     args.effect_input = False
     args.effect_output = True
     args.dummy_setting = True
     args.return_phase = False
 
-    args.latent_dim = 2048
+    # args.latent_dim = 2048
 
-    args.train_examples_per_epoch=100
-    args.val_examples_per_epoch=10
+    args.train_examples_per_epoch = 5_000
+    args.val_examples_per_epoch = 500
 
-    args.lr = 3e-4
-    args.max_epochs = 3
+    args.lr = 1e-4
+    args.max_epochs = 100
 
     # Checkpoint on the first reconstruction loss
     args.train_monitor = f"train_loss/{args.recon_losses[-1]}"
     args.val_monitor = f"val_loss/{args.recon_losses[-1]}"
 
-    dataset_str = [f"{str(i).strip('_')}_" for i in args.input_dirs]
+    dataset_str = args.input_dirs[0]
 
     train_checkpoint = pl.callbacks.ModelCheckpoint(
-            monitor=args.train_monitor,
-            filename="{epoch}-{step}-train-" + f"{dataset_str}",
-        )
+        monitor=args.train_monitor,
+        filename="{epoch}-{step}-train-" + f"{dataset_str}",
+    )
     val_checkpoint = pl.callbacks.ModelCheckpoint(
         monitor=args.val_monitor,
         filename="{epoch}-{step}-val-" + f"{dataset_str}",
@@ -75,7 +75,6 @@ if __name__ == "__main__":
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        # reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
             LogAudioCallback(),
