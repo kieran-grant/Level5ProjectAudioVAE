@@ -122,11 +122,19 @@ class EndToEndSystem(pl.LightningModule):
                 )
 
     def _build_dafx(self):
-        if self.hparams.dafx_name.lower() == "clean":
-            self.dafx = NullDAFXWrapper()
+        self.dafx = self._get_dafx_from_name(self.hparams.dafx_name,
+                                             dafx_file=self.hparams.dafx_file,
+                                             sample_rate=self.hparams.sample_rate)
+
+    @staticmethod
+    def _get_dafx_from_name(name, dafx_file, sample_rate=24_000):
+        if name.lower() == "clean":
+            wrapper = NullDAFXWrapper()
         else:
-            dafx = load_plugin(self.hparams.dafx_file, plugin_name=self.hparams.dafx_name)
-            self.dafx = DAFXWrapper(dafx, sample_rate=self.hparams.sample_rate)
+            dafx = load_plugin(dafx_file, plugin_name=name)
+            wrapper = DAFXWrapper(dafx, sample_rate=sample_rate)
+
+        return wrapper
 
     # ======= public methods =========
     def forward(self,
@@ -297,8 +305,12 @@ class EndToEndSystem(pl.LightningModule):
         return optimizers, lr_schedulers
 
     def train_dataloader(self):
+        wrapper = self._get_dafx_from_name(self.hparams.dafx_name,
+                                         dafx_file=self.hparams.dafx_file,
+                                         sample_rate=self.hparams.sample_rate)
+
         train_dataset = PairedAudioDataset(
-            dafx=self.dafx,
+            dafx=wrapper,
             audio_dir=self.hparams.audio_dir,
             subset="train",
             train_frac=self.hparams.train_frac,
@@ -327,8 +339,12 @@ class EndToEndSystem(pl.LightningModule):
         )
 
     def val_dataloader(self):
+        wrapper = self._get_dafx_from_name(self.hparams.dafx_name,
+                                           dafx_file=self.hparams.dafx_file,
+                                           sample_rate=self.hparams.sample_rate)
+
         val_dataset = PairedAudioDataset(
-            dafx=self.dafx,
+            dafx=wrapper,
             audio_dir=self.hparams.audio_dir,
             subset="val",
             train_frac=self.hparams.train_frac,
@@ -357,11 +373,11 @@ class EndToEndSystem(pl.LightningModule):
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # --- Training  ---
-        parser.add_argument("--batch_size", type=int, default=32)
+        parser.add_argument("--batch_size", type=int, default=16)
         parser.add_argument("--lr", type=float, default=3e-4)
         parser.add_argument("--lr_patience", type=int, default=20)
-        parser.add_argument("--recon_losses", nargs="+", default=["l1"])
-        parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0])
+        parser.add_argument("--recon_losses", nargs="+", default=["mrsft", "l1"])
+        parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0, 100.0])
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
@@ -384,7 +400,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # ---  SPSA  ---
         parser.add_argument("--plugin_config_file", type=str, default=None)
-        parser.add_argument("--spsa_epsilon", type=float, default=0.001)
+        parser.add_argument("--spsa_epsilon", type=float, default=0.0005)
         parser.add_argument("--spsa_schedule", action="store_true")
 
         # ------- Dataset  -----------

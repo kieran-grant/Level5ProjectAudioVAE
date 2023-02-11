@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        reload_dataloaders_every_n_epochs=1,
+        # reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
             checkpoint_callback,
