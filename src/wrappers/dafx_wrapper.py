@@ -109,6 +109,7 @@ class DAFXWrapper(BaseDAFXWrapper):
         """
         signal = self._safe_convert_tensor_to_numpy_cpu(signal)
         params = self._safe_convert_tensor_to_numpy_cpu(params)
+        params = self._clip_params(params)
 
         # Set parameters
         self.set_normalised_parameter_vector(params)
@@ -241,3 +242,7 @@ class DAFXWrapper(BaseDAFXWrapper):
 
         for idx in range(len(vector)):
             self.set_denormalised_index_parameter(idx, vector[idx])
+
+    @staticmethod
+    def _clip_params(params):
+        return np.clip(params, a_min=0.01, a_max=0.99)

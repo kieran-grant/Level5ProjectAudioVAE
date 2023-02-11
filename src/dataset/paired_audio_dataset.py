@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 import src.utils as utils
 from src.dataset.audio_file import AudioFile
-from src.wrappers.dafx_wrapper import DAFXWrapper
+from src.wrappers.base_dafx_wrapper import BaseDAFXWrapper
 import src.dataset.augmentations as augmentations
 
 
@@ -41,7 +41,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
 
     def __init__(
             self,
-            dafx: DAFXWrapper,
+            dafx: BaseDAFXWrapper,
             audio_dir: str,
             input_dirs: List = None,
             subset: str = "train",

@@ -130,3 +130,10 @@ dmypy.json
 
 # Audio files
 *.wav
+
+# Project specific
+wandb
+configs
+*.ckpt
+MNIST
+.idea
