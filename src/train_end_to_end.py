@@ -16,7 +16,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vctk_2dafx_no_clean_dummy', project='l5proj_end2end')
+    wandb_logger = WandbLogger(name='vctk_overdrive_out_effect_only', project='l5proj_end2end')
     # wandb_logger = None
 
     early_stopping = EarlyStopping(
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     args.effect_input = False
     args.effect_output = True
-    args.dummy_setting = True
+    args.dummy_setting = False
     args.return_phase = False
 
     # args.latent_dim = 2048
@@ -63,11 +63,11 @@ if __name__ == "__main__":
 
     dataset_str = args.input_dirs[0]
 
-    train_checkpoint = pl.callbacks.ModelCheckpoint(
+    train_checkpoint = ModelCheckpoint(
         monitor=args.train_monitor,
         filename="{epoch}-{step}-train-" + f"{dataset_str}",
     )
-    val_checkpoint = pl.callbacks.ModelCheckpoint(
+    val_checkpoint = ModelCheckpoint(
         monitor=args.val_monitor,
         filename="{epoch}-{step}-val-" + f"{dataset_str}",
     )

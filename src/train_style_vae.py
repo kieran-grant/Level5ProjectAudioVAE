@@ -34,7 +34,7 @@ if __name__ == "__main__":
     early_stopping = EarlyStopping(
         monitor="val_loss/loss",
         mode="min",
-        patience=40)
+        patience=50)
 
     # arg parse for config
     parser = ArgumentParser()

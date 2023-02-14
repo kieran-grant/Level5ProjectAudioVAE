@@ -190,11 +190,13 @@ class StyleTransferVAE(pl.LightningModule):
         x_s = self.audio_to_spectrogram(signal=x,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
+                                        window_size=self.hparams.window_size,
                                         return_phase=self.hparams.return_phase)
 
         y_s = self.audio_to_spectrogram(signal=y,
                                         n_fft=self.hparams.n_fft,
                                         hop_length=self.hparams.hop_length,
+                                        window_size=self.hparams.window_size,
                                         return_phase=self.hparams.return_phase)
 
         X = torch.concat([x_s, y_s], dim=1)
@@ -215,19 +217,22 @@ class StyleTransferVAE(pl.LightningModule):
 
         return loss
 
-    def audio_to_spectrogram(self,
-                             signal: torch.Tensor,
+    @staticmethod
+    def audio_to_spectrogram(signal: torch.Tensor,
                              n_fft: int = 4096,
                              hop_length: int = 2048,
+                             window_size: int = 4096,
                              return_phase=True):
 
         bs, _, _ = signal.size()
+
+        window = torch.nn.Parameter(torch.hann_window(window_size)).to(signal.device)
 
         X = torch.stft(
             signal.view(bs, -1),
             n_fft=n_fft,
             hop_length=hop_length,
-            window=self.window,
+            window=window,
             return_complex=True,
         )
 
