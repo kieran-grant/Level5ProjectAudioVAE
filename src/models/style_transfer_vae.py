@@ -261,6 +261,8 @@ class StyleTransferVAE(pl.LightningModule):
 
         return torch.concat([X_db_norm, X_phase], dim=1)
 
+
+
     def training_step(self, batch, batch_idx):
         loss = self.common_paired_step(
             batch,
