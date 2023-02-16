@@ -23,14 +23,10 @@ class StyleTransferVAE(pl.LightningModule):
 
     # =========== PRIVATE METHODS =============
     def _build_model(self):
-        self._build_spectrogram_parameters()
         self._build_vae_parameters()
         self._build_dafx()
         self._build_encoder()
         self._build_decoder()
-
-    def _build_spectrogram_parameters(self):
-        self.window = torch.nn.Parameter(torch.hann_window(self.hparams.window_size))
 
     def _build_vae_parameters(self):
         self.hidden_dim_enc = prod(self.hparams.hidden_dim)

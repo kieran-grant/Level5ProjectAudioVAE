@@ -59,10 +59,10 @@ if __name__ == "__main__":
     args.return_phase = False
 
     args.num_channels = 2
-    args.latent_dim = 2048
+    args.latent_dim = 4096
 
-    args.vae_beta = 5e-4
-    args.lr = 3e-4
+    args.vae_beta = 1e-3
+    args.lr = 5e-5
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
