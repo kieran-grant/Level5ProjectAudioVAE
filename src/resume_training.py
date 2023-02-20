@@ -21,7 +21,7 @@ from src.models.style_transfer_vae import StyleTransferVAE
 # ]
 
 SEED = 1234
-PATH_TO_CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/mqm5ha1g/checkpoints/epoch=590-step=369375.ckpt"
+PATH_TO_CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/ed5w27io/checkpoints/epoch=788-step=493125.ckpt"
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             # early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=800,
+        max_epochs=850,
         accelerator='gpu',
     )
 

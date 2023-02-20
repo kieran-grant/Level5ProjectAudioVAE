@@ -222,7 +222,7 @@ class StyleTransferVAE(pl.LightningModule):
 
         bs, _, _ = signal.size()
 
-        window = torch.nn.Parameter(torch.hann_window(window_size)).to(signal.device)
+        window = torch.hann_window(window_size).to(signal.device)
 
         X = torch.stft(
             signal.view(bs, -1),
@@ -256,7 +256,6 @@ class StyleTransferVAE(pl.LightningModule):
         X_phase = X_phase.unsqueeze(1).permute(0, 1, 3, 2)
 
         return torch.concat([X_db_norm, X_phase], dim=1)
-
 
 
     def training_step(self, batch, batch_idx):
