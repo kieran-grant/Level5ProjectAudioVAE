@@ -9,14 +9,14 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.end_to_end import EndToEndSystem
 
-SEED = 1234
+SEED = 101
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
-    torch.set_float32_matmul_precision('medium')
+    torch.set_float32_matmul_precision('high')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vtck_overdrive_static_params', project='l5proj_end2end')
+    wandb_logger = WandbLogger(name='vtck_overdrive_static_params_test', project='l5proj_end2end')
     # wandb_logger = None
 
     early_stopping = EarlyStopping(

@@ -67,13 +67,6 @@ class EndToEndSystem(pl.LightningModule):
 
         self.controller = nn.Sequential(*layers)
 
-        def init_weights(m):
-            if isinstance(m, nn.Linear):
-                torch.nn.init.xavier_uniform(m.weight)
-                m.bias.data.fill_(0.01)
-
-        self.controller.apply(init_weights)
-
         self.dafx_layer = DAFXLayer(self.dafx, self.eps_scheduler.epsilon)
 
     def _configure_losses(self):
@@ -266,6 +259,12 @@ class EndToEndSystem(pl.LightningModule):
         )
 
         return loss
+
+    def training_epoch_end(self, training_step_outputs):
+        if self.hparams.spsa_schedule:
+            self.eps_scheduler.step(
+                self.trainer.callback_metrics[self.hparams.train_monitor],
+            )
 
     def validation_step(self, batch, batch_idx, optimizer_idx=0):
         loss, data_dict = self.common_paired_step(
