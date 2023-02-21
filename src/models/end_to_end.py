@@ -395,7 +395,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[1024, 512, 256, 128])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[512])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
@@ -409,7 +409,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # ---  SPSA  ---
         parser.add_argument("--plugin_config_file", type=str, default=None)
-        parser.add_argument("--spsa_epsilon", type=float, default=0.0005)
+        parser.add_argument("--spsa_epsilon", type=float, default=0.005)
         parser.add_argument("--spsa_schedule", action="store_true")
 
         # ------- Dataset  -----------

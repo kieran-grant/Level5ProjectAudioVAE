@@ -157,18 +157,18 @@ class PairedAudioDataset(torch.utils.data.Dataset):
         # generate pairs for style training
         input_audio, target_audio = self.generate_pair()
 
-        # ------------------------ Conform length of files -------------------
-        input_audio = utils.conform_length(input_audio, int(self.length))
-        target_audio = utils.conform_length(target_audio, int(self.length))
-
+        # # ------------------------ Conform length of files -------------------
+        # input_audio = utils.conform_length(input_audio, int(self.length))
+        # target_audio = utils.conform_length(target_audio, int(self.length))
+        #
         # ------------------------ Apply fade in and fade out -------------------
-        input_audio = utils.linear_fade(input_audio, sample_rate=self.sample_rate)
-        target_audio = utils.linear_fade(target_audio, sample_rate=self.sample_rate)
-
-        # ------------------------ Final normalization ----------------------
-        # always peak normalize final input/target to -12 dBFS
-        input_audio = utils.peak_normalise(input_audio)
-        target_audio = utils.peak_normalise(target_audio)
+        # input_audio = utils.linear_fade(input_audio, sample_rate=self.sample_rate)
+        # target_audio = utils.linear_fade(target_audio, sample_rate=self.sample_rate)
+        #
+        # # ------------------------ Final normalization ----------------------
+        # # always peak normalize final input/target to -12 dBFS
+        # input_audio = utils.peak_normalise(input_audio)
+        # target_audio = utils.peak_normalise(target_audio)
 
         return input_audio, target_audio
 
@@ -233,6 +233,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
         # peak normalize
         input_audio = utils.peak_normalise(input_audio)  # with min 3 dBFS headroom
 
+
         # scene augmentation (pitch/tempo)
         if len(list(self.augmentations.items())) > 0:
             if torch.rand(1).sum() < 0.5:
@@ -246,13 +247,16 @@ class PairedAudioDataset(torch.utils.data.Dataset):
         else:
             input_audio_aug = input_audio.clone()
 
+        # conform length
+        input_audio_aug = utils.conform_length(input_audio_aug, int(self.length))
+
         input_audio_corrupt = input_audio_aug.clone()
 
         if self.effect_input and torch.rand(1).sum() < 0.75:
             input_audio_corrupt = self.dafx.process_audio_with_random_settings(input_audio_aug,
                                                                                threshold=self.random_effect_threshold)
         # peak normalize again
-        input_audio_corrupt = utils.peak_normalise(input_audio_corrupt)  # with min 3 dBFS headroom
+        # input_audio_corrupt = utils.peak_normalise(input_audio_corrupt)  # with min 3 dBFS headroom
 
         # ------------------------ Target audio ----------------------
         # use the same augmented audio clip, add different DAFX setting
@@ -265,7 +269,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
                                                                                 threshold=self.random_effect_threshold)
 
         # peak normalize again
-        target_audio_corrupt = utils.peak_normalise(target_audio_corrupt)  # with min 3 dBFS headroom
+        # target_audio_corrupt = utils.peak_normalise(target_audio_corrupt)  # with min 3 dBFS headroom
 
         # make correct shape
         if len(input_audio_corrupt.shape) == 1:

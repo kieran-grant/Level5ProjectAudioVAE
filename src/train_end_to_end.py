@@ -16,7 +16,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vctk_overdrive_out_effect_only', project='l5proj_end2end')
+    wandb_logger = WandbLogger(name='vtck_overdrive_static_params', project='l5proj_end2end')
     # wandb_logger = None
 
     early_stopping = EarlyStopping(
@@ -42,11 +42,11 @@ if __name__ == "__main__":
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
     args.audio_encoder_ckpt = \
-        "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/ync68xdq/checkpoints/epoch=193-step=121250.ckpt"
+        "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/3kdv9ddi/checkpoints/epoch=820-step=513125.ckpt"
 
     args.effect_input = False
-    args.effect_output = True
-    args.dummy_setting = False
+    args.effect_output = False
+    args.dummy_setting = True
     args.return_phase = False
 
     # args.latent_dim = 2048
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     args.val_examples_per_epoch = 500
 
     args.lr = 1e-4
-    args.max_epochs = 100
+    args.max_epochs = 30
 
     # Checkpoint on the first reconstruction loss
     args.train_monitor = f"train_loss/{args.recon_losses[-1]}"
