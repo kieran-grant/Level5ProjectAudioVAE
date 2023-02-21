@@ -409,7 +409,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[512, 512])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[256])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
