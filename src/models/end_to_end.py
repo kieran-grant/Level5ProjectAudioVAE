@@ -16,6 +16,7 @@ from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
 from src.models.style_transfer_vae import StyleTransferVAE
+from src.spsa.epsilon_scheduler import EpsilonScheduler
 
 
 class EndToEndSystem(pl.LightningModule):
@@ -23,6 +24,13 @@ class EndToEndSystem(pl.LightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
+
+        self.eps_scheduler = EpsilonScheduler(
+            self.hparams.spsa_epsilon,
+            self.hparams.spsa_patience,
+            self.hparams.spsa_factor,
+            self.hparams.spsa_verbose,
+        )
 
         self._build_dafx()
         self._build_audio_encoder()
@@ -59,7 +67,14 @@ class EndToEndSystem(pl.LightningModule):
 
         self.controller = nn.Sequential(*layers)
 
-        self.dafx_layer = DAFXLayer(self.dafx, self.hparams.spsa_epsilon)
+        def init_weights(m):
+            if isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform(m.weight)
+                m.bias.data.fill_(0.01)
+
+        self.controller.apply(init_weights)
+
+        self.dafx_layer = DAFXLayer(self.dafx, self.eps_scheduler.epsilon)
 
     def _configure_losses(self):
         if len(self.hparams.recon_losses) != len(self.hparams.recon_loss_weights):
@@ -395,7 +410,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[512])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[512, 512])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
@@ -408,9 +423,11 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--return_phase", type=bool, default=False)
 
         # ---  SPSA  ---
-        parser.add_argument("--plugin_config_file", type=str, default=None)
-        parser.add_argument("--spsa_epsilon", type=float, default=0.01)
-        parser.add_argument("--spsa_schedule", action="store_true")
+        parser.add_argument("--spsa_epsilon", type=float, default=0.001)
+        parser.add_argument("--spsa_schedule", type=bool, default=True)
+        parser.add_argument("--spsa_patience", type=int, default=5)
+        parser.add_argument("--spsa_verbose", type=bool, default=True)
+        parser.add_argument("--spsa_factor", type=float, default=0.5)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
