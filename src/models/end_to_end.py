@@ -409,7 +409,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # ---  SPSA  ---
         parser.add_argument("--plugin_config_file", type=str, default=None)
-        parser.add_argument("--spsa_epsilon", type=float, default=0.005)
+        parser.add_argument("--spsa_epsilon", type=float, default=0.01)
         parser.add_argument("--spsa_schedule", action="store_true")
 
         # ------- Dataset  -----------

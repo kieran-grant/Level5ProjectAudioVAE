@@ -54,7 +54,7 @@ if __name__ == "__main__":
     args.train_examples_per_epoch = 5_000
     args.val_examples_per_epoch = 500
 
-    args.lr = 1e-4
+    args.lr = 3e-4
     args.max_epochs = 30
 
     # Checkpoint on the first reconstruction loss

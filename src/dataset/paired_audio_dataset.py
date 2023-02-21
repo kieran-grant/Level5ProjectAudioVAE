@@ -249,7 +249,10 @@ class PairedAudioDataset(torch.utils.data.Dataset):
 
         # conform length
         input_audio_aug = utils.conform_length(input_audio_aug, int(self.length))
+        # linear fade
+        input_audio_aug = utils.linear_fade(input_audio_aug, sample_rate=self.sample_rate)
 
+        # ---------------------- Input audio --------------------------
         input_audio_corrupt = input_audio_aug.clone()
 
         if self.effect_input and torch.rand(1).sum() < 0.75:
