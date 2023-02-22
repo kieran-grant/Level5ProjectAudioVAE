@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from src.models.end_to_end import EndToEndSystem
 
-SEED = 101
+SEED = 1234
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -54,9 +54,6 @@ if __name__ == "__main__":
     args.train_examples_per_epoch = 5_000
     args.val_examples_per_epoch = 500
 
-    args.lr = 3e-4
-    args.max_epochs = 30
-
     # Checkpoint on the first reconstruction loss
     args.train_monitor = f"train_loss/{args.recon_losses[-1]}"
     args.val_monitor = f"val_loss/{args.recon_losses[-1]}"
@@ -83,6 +80,7 @@ if __name__ == "__main__":
             early_stopping
         ],
         num_sanity_val_steps=0,
+        max_epochs=30,
         accelerator='cpu',
     )
 

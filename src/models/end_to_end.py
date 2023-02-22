@@ -25,12 +25,12 @@ class EndToEndSystem(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        self.eps_scheduler = EpsilonScheduler(
-            self.hparams.spsa_epsilon,
-            self.hparams.spsa_patience,
-            self.hparams.spsa_factor,
-            self.hparams.spsa_verbose,
-        )
+        # self.eps_scheduler = EpsilonScheduler(
+        #     self.hparams.spsa_epsilon,
+        #     self.hparams.spsa_patience,
+        #     self.hparams.spsa_factor,
+        #     self.hparams.spsa_verbose,
+        # )
 
         self._build_dafx()
         self._build_audio_encoder()
@@ -67,7 +67,7 @@ class EndToEndSystem(pl.LightningModule):
 
         self.controller = nn.Sequential(*layers)
 
-        self.dafx_layer = DAFXLayer(self.dafx, self.eps_scheduler.epsilon)
+        self.dafx_layer = DAFXLayer(self.dafx, self.hparams.spsa_epsilon)
 
     def _configure_losses(self):
         if len(self.hparams.recon_losses) != len(self.hparams.recon_loss_weights):
@@ -260,11 +260,11 @@ class EndToEndSystem(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, training_step_outputs):
-        if self.hparams.spsa_schedule:
-            self.eps_scheduler.step(
-                self.trainer.callback_metrics[self.hparams.train_monitor],
-            )
+    # def training_epoch_end(self, training_step_outputs):
+    #     if self.hparams.spsa_schedule:
+    #         self.eps_scheduler.step(
+    #             self.trainer.callback_metrics[self.hparams.train_monitor],
+    #         )
 
     def validation_step(self, batch, batch_idx, optimizer_idx=0):
         loss, data_dict = self.common_paired_step(
@@ -409,7 +409,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[256])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[1024, 512, 256])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
@@ -422,7 +422,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--return_phase", type=bool, default=False)
 
         # ---  SPSA  ---
-        parser.add_argument("--spsa_epsilon", type=float, default=0.001)
+        parser.add_argument("--spsa_epsilon", type=float, default=0.01)
         parser.add_argument("--spsa_schedule", type=bool, default=True)
         parser.add_argument("--spsa_patience", type=int, default=5)
         parser.add_argument("--spsa_verbose", type=bool, default=True)
@@ -431,7 +431,7 @@ class EndToEndSystem(pl.LightningModule):
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
         parser.add_argument("--ext", type=str, default="wav")
-        parser.add_argument("--input_dirs", nargs="+", default=['musdb18_24000', 'vctk_24000'])
+        parser.add_argument("--input_dirs", nargs="+", default=['vctk_24000'])
         parser.add_argument("--buffer_reload_rate", type=int, default=1000)
         parser.add_argument("--buffer_size_gb", type=float, default=1.0)
         parser.add_argument("--sample_rate", type=int, default=24_000)
@@ -446,7 +446,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=131_072)
         parser.add_argument("--val_examples_per_epoch", type=int, default=500)
-        parser.add_argument("--num_workers", type=int, default=4)
+        parser.add_argument("--num_workers", type=int, default=2)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 
         return parser

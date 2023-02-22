@@ -85,9 +85,9 @@ def plot_multi_spectrum(
         if zero_mean:
             H_dB -= np.mean(H_dB)
         if "Target" in legend[idx]:
-            ax1.plot(freqs, H_dB, linestyle="--", color="k")
+            ax1.plot(freqs, H_dB, linestyle="--", color="k", alpha=.8)
         else:
-            ax1.plot(freqs, H_dB)
+            ax1.plot(freqs, H_dB, alpha=.8)
 
     plt.legend(legend)
 
@@ -100,7 +100,7 @@ def plot_multi_spectrum(
     plt.grid(c="lightgray", which="both")
 
     if filename is not None:
-        plt.savefig(f"{filename}.png", dpi=300)
+        plt.savefig(f"{filename}.png")
 
     plt.tight_layout()
 

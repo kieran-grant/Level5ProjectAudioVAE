@@ -184,7 +184,7 @@ class LogAudioCallback(pl.callbacks.Callback):
 def compare_spectra(
         y_hat, y, x, baseline_y_hat=None, sample_rate=44100, n_fft=16384
 ):
-    legend = ["Input (corrupt)"]
+    legend = ["Input"]
     signals = [x]
 
     if baseline_y_hat is not None:
