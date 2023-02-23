@@ -16,7 +16,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vtck_overdrive_random_params_out_only', project='l5proj_end2end')
+    wandb_logger = WandbLogger(name='vtck_delay_random_params_out_only', project='l5proj_end2end')
     # wandb_logger = None
 
     early_stopping = EarlyStopping(
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     args.input_dirs = ['vctk_24000']
 
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
-    args.dafx_name = "mda Overdrive"
+    args.dafx_name = "mda Delay"
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
     args.audio_encoder_ckpt = \
