@@ -218,7 +218,7 @@ class StyleTransferVAE(pl.LightningModule):
                              n_fft: int = 4096,
                              hop_length: int = 2048,
                              window_size: int = 4096,
-                             return_phase=True):
+                             return_phase=False):
 
         bs, _, _ = signal.size()
 
