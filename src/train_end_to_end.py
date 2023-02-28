@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     args.effect_input = False
     args.effect_output = True
-    args.dummy_setting = False
+    args.dummy_setting = True
 
     args.train_examples_per_epoch = 5_000
     args.val_examples_per_epoch = 500

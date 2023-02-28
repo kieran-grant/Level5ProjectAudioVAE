@@ -192,6 +192,9 @@ class EndToEndSystem(pl.LightningModule):
         # Activation -> (0,1)
         p = torch.sigmoid(p_logits)
 
+        # Clamp -> [0.01, 0.99]
+        p = torch.clamp(p, min=0.01, max=0.99)
+
         # Process audio conditioned on parameters
         y_hat = self.dafx_layer([x, p]).unsqueeze(1)
 
