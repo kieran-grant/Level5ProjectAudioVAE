@@ -18,6 +18,8 @@ DAFX_TO_USE = [
     # 'mda Thru-Zero Flanger',
     # 'mda Loudness',
     # 'mda Limiter'
+    'mda Dynamics',
+    'mda RingMod',
 ]
 
 SEED = 1234
@@ -27,14 +29,14 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vctk_2dafx_no_clean', project='l5proj_style_vae')
+    wandb_logger = WandbLogger(name='vctk_4dafx_random_settings', project='l5proj_style_vae')
     # wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
     early_stopping = EarlyStopping(
         monitor="val_loss/loss",
         mode="min",
-        patience=50)
+        patience=100)
 
     # arg parse for config
     parser = ArgumentParser()
@@ -55,8 +57,8 @@ if __name__ == "__main__":
 
     args.effect_input = False
     args.effect_output = True
-    args.dummy_setting = True
-    args.return_phase = False
+    args.dummy_setting = False
+    args.normalise_audio = True
 
     args.num_channels = 2
     args.latent_dim = 4096
@@ -74,7 +76,7 @@ if __name__ == "__main__":
             early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=300,
+        max_epochs=600,
         accelerator='gpu',
     )
 

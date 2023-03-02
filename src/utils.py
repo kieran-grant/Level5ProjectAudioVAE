@@ -42,6 +42,38 @@ def peak_normalise(signal: torch.Tensor):
     return signal
 
 
+def audio_to_spectrogram(signal: torch.Tensor,
+                         n_fft: int = 4096,
+                         hop_length: int = 2048,
+                         window_size: int = 4096,
+                         normalise_audio: bool = True):
+
+    bs, _, _ = signal.size()
+
+    if normalise_audio:
+        signal = peak_normalise(signal)
+
+    window = torch.hann_window(window_size).to(signal.device)
+
+    X = torch.stft(
+        signal.view(bs, -1),
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        return_complex=True,
+    )
+
+    # Absolute value part
+    X_db = torch.pow(X.abs() + 1e-8, 0.3)
+
+    # Normalise (0,1)
+    X_db_norm = (X_db - X_db.mean()) / X_db.std()
+
+    X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+
+    return X_db_norm
+
+
 def is_silent(signal: torch.Tensor):
     """
     Returns True if signal is silent
@@ -117,48 +149,6 @@ def split_dataset(file_list, subset, train_frac):
         raise ValueError("Invalid subset: {subset}.")
 
     return file_list[start_idx:stop_idx]
-
-
-def audio_to_spectrogram(signal: torch.Tensor,
-                         n_fft: int = 4096,
-                         hop_length: int = 2048,
-                         return_phase=True):
-
-    bs, _, _ = signal.size()
-    window = torch.nn.Parameter(torch.hann_window(4096))
-
-    X = torch.stft(
-        signal.view(bs, -1),
-        n_fft=n_fft,
-        hop_length=hop_length,
-        window=window,
-        return_complex=True,
-    )
-
-    # Absolute value part
-    X_db = torch.pow(X.abs() + 1e-8, 0.3)
-    X_db_norm = X_db
-
-    # Normalise (0,1)
-    X_db_norm -= 0.3352797
-    X_db_norm /= 0.2745147
-
-    X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
-
-    if not return_phase:
-        return X_db_norm
-
-    # Angle part
-    X_phase = torch.angle(X)
-    X_phase_norm = X_phase
-
-    # Normalise (0,1)
-    X_phase_norm -= 0.0025563
-    X_phase_norm /= 1.8219221
-
-    X_phase = X_phase.unsqueeze(1).permute(0, 1, 3, 2)
-
-    return torch.concat([X_db_norm, X_phase], dim=1)
 
 
 def rademacher(size):

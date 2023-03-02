@@ -11,6 +11,7 @@ from pedalboard.pedalboard import load_plugin
 from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
+from src.utils import audio_to_spectrogram
 
 
 class StyleTransferVAE(pl.LightningModule):
@@ -183,17 +184,17 @@ class StyleTransferVAE(pl.LightningModule):
         x, y = batch
 
         # Get spectrograms
-        x_s = self.audio_to_spectrogram(signal=x,
-                                        n_fft=self.hparams.n_fft,
-                                        hop_length=self.hparams.hop_length,
-                                        window_size=self.hparams.window_size,
-                                        return_phase=self.hparams.return_phase)
+        x_s = audio_to_spectrogram(signal=x,
+                                   n_fft=self.hparams.n_fft,
+                                   hop_length=self.hparams.hop_length,
+                                   window_size=self.hparams.window_size,
+                                   normalise_audio=self.hparams.normalise_audio)
 
-        y_s = self.audio_to_spectrogram(signal=y,
-                                        n_fft=self.hparams.n_fft,
-                                        hop_length=self.hparams.hop_length,
-                                        window_size=self.hparams.window_size,
-                                        return_phase=self.hparams.return_phase)
+        y_s = audio_to_spectrogram(signal=y,
+                                   n_fft=self.hparams.n_fft,
+                                   hop_length=self.hparams.hop_length,
+                                   window_size=self.hparams.window_size,
+                                   normalise_audio=self.hparams.normalise_audio)
 
         X = torch.concat([x_s, y_s], dim=1)
 
@@ -256,7 +257,6 @@ class StyleTransferVAE(pl.LightningModule):
         X_phase = X_phase.unsqueeze(1).permute(0, 1, 3, 2)
 
         return torch.concat([X_db_norm, X_phase], dim=1)
-
 
     def training_step(self, batch, batch_idx):
         loss = self.common_paired_step(
@@ -367,6 +367,7 @@ class StyleTransferVAE(pl.LightningModule):
         parser.add_argument("--hop_length", type=int, default=2048)
         parser.add_argument("--window_size", type=int, default=4096)
         parser.add_argument("--return_phase", type=bool, default=False)
+        parser.add_argument("--normalise_audio", type=bool, default=True)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
