@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from src.models.style_transfer_vae import StyleTransferVAE
 
 SEED = 1234
-PATH_TO_CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/aoo9px7h/checkpoints/epoch=590-step=369375.ckpt"
+PATH_TO_CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/renudd7j/checkpoints/epoch=1212-step=758125.ckpt"
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     system = StyleTransferVAE.load_from_checkpoint(PATH_TO_CHECKPOINT)
 
-    system.hparams.vae_beta = 1e-2
+    system.hparams.vae_beta = 1
     system.hparams.lr = 5e-5
 
     # Set up trainer
@@ -47,7 +47,7 @@ if __name__ == "__main__":
             early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=1200,
+        max_epochs=1300,
         accelerator='gpu',
     )
 
