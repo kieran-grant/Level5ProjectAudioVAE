@@ -21,7 +21,7 @@ if __name__ == "__main__":
     early_stopping = EarlyStopping(
         monitor="val_loss/loss",
         mode="min",
-        patience=100)
+        patience=200)
 
     # arg parse for config
     parser = ArgumentParser()
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     system = StyleTransferVAE.load_from_checkpoint(PATH_TO_CHECKPOINT)
 
     system.hparams.vae_beta = 1e-2
-    system.hparams.lr = 1e-4
+    system.hparams.lr = 5e-5
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
