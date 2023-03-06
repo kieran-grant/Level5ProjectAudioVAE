@@ -45,13 +45,13 @@ class AudioDataset(torch.utils.data.Dataset):
             audio_dir: str,
             input_dirs: List = None,
             subset: str = "train",
-            length: int = 131_072,
+            length: int = 24_000 * 5,
             train_frac: float = 0.8,
-            val_frac: float = 0.1,
+            val_per: float = 0.1,
             buffer_size_gb: float = 1.0,
-            buffer_reload_rate: float = 1_000,
+            buffer_reload_rate: float = 1000,
             half: bool = False,
-            num_examples_per_epoch: int = 10_000,
+            num_examples_per_epoch: int = 10000,
             random_effect_threshold: float = 0.75,
             effect_audio: bool = True,
             augmentations: dict = None,
@@ -68,7 +68,7 @@ class AudioDataset(torch.utils.data.Dataset):
         self.subset = subset
         self.length = length
         self.train_frac = train_frac
-        self.val_frac = val_frac
+        self.val_per = val_per
         self.buffer_size_gb = buffer_size_gb
         self.buffer_reload_rate = buffer_reload_rate
         self.half = half
@@ -155,20 +155,11 @@ class AudioDataset(torch.utils.data.Dataset):
         # generate pairs for style training
         audio = self.generate_audio()
 
-        # ------------------------ Conform length of files -------------------
-        audio = utils.conform_length(audio, int(self.length))
-
-        # ------------------------ Apply fade in and fade out -------------------
-        audio = utils.linear_fade(audio, sample_rate=self.sample_rate)
-
         # ------------------------ Final normalization ----------------------
         # always peak normalize final input/target to -12 dBFS
         audio = utils.peak_normalise(audio)
 
-        # ------------------------ To Spectrogram ---------------------------
-        spectrogram = utils.audio_to_spectrogram(audio)
-
-        return spectrogram
+        return audio
 
     def load_audio_buffer(self):
         self.input_files_loaded = {}  # clear audio buffer
@@ -244,6 +235,13 @@ class AudioDataset(torch.utils.data.Dataset):
         else:
             input_audio_aug = input_audio.clone()
 
+        # conform length
+        input_audio_aug = utils.conform_length(input_audio_aug, self.length)
+
+        # apply linear fade
+        input_audio_aug = utils.linear_fade(input_audio_aug, sample_rate=self.sample_rate)
+
+        # ---------------------- Input audio --------------------------
         input_audio_corrupt = input_audio_aug.clone()
 
         if self.dummy_setting:
@@ -257,6 +255,8 @@ class AudioDataset(torch.utils.data.Dataset):
         # make correct shape
         if len(input_audio_corrupt.shape) == 1:
             input_audio_corrupt = input_audio_corrupt[None, :]
+
+        input_audio_corrupt = utils.conform_length(input_audio_corrupt, self.length)
 
         return input_audio_corrupt
 

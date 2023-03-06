@@ -1,132 +1,110 @@
 from argparse import ArgumentParser
 from math import prod
-from typing import Tuple
-from pedalboard.pedalboard import load_plugin
 
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pytorch_lightning as pl
+from pedalboard.pedalboard import load_plugin
 
 from src.dataset.audio_dataset import AudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
+from src.utils import audio_to_spectrogram
 
 
+# noinspection DuplicatedCode
 class SpectrogramVAE(pl.LightningModule):
     # =========== MAGIC METHODS =============
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
 
+        self._build_model()
+
+    # =========== PRIVATE METHODS =============
+    def _build_model(self):
+        self._build_vae_parameters()
+        self._build_dafx()
+        self._build_encoder()
+        self._build_decoder()
+
+    def _build_vae_parameters(self):
+        self.hidden_dim_enc = prod(self.hparams.hidden_dim)
+        self.hidden_dim_dec = self.hparams.hidden_dim
+
+        channels = [self.hparams.num_channels, 8, 16, 32, 32]
+        self.enc_channels = channels
+        self.dec_channels = channels[::-1]
+
+    def _build_dafx(self):
         # Load instances for each type of DAFX
         self.dafx_list = self._get_dafx_from_names()
         # Create entry for current dafx name for logging
         self.current_dafx = None
 
-        self.hidden_dim_enc = prod(self.hparams.hidden_dim)
-        self.hidden_dim_dec = self.hparams.hidden_dim
-
-        self._build_model()
-
-    # =========== PRIVATE METHODS =============
-    def _build_model(self):
-        self._build_encoder()
-        self._build_decoder()
-
     def _build_encoder(self):
-        self.enc_conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=self.hparams.num_channels,
-                      out_channels=8,
-                      kernel_size=self.hparams.conv_kernel,
-                      padding=self.hparams.conv_padding,
-                      stride=self.hparams.conv_stride
-                      ),
-            nn.ReLU(),
-            nn.BatchNorm2d(8)
-        )
+        conv_layers = []
 
-        self.enc_conv2 = nn.Sequential(
-            nn.Conv2d(in_channels=8,
-                      out_channels=16,
-                      kernel_size=self.hparams.conv_kernel,
-                      padding=self.hparams.conv_padding,
-                      stride=self.hparams.conv_stride
-                      ),
-            nn.ReLU(),
-            nn.BatchNorm2d(16),
-        )
+        for i in range(len(self.enc_channels) - 1):
+            conv_layers.append(nn.Sequential(
+                nn.Conv2d(in_channels=self.enc_channels[i],
+                          out_channels=self.enc_channels[i + 1],
+                          kernel_size=self.hparams.conv_kernel,
+                          padding=self.hparams.conv_padding,
+                          stride=self.hparams.conv_stride
+                          ),
+                nn.ReLU(),
+                nn.BatchNorm2d(self.enc_channels[i + 1])
+            ))
 
-        self.enc_conv3 = nn.Sequential(
-            nn.Conv2d(in_channels=16,
-                      out_channels=32,
-                      kernel_size=self.hparams.conv_kernel,
-                      padding=self.hparams.conv_padding,
-                      stride=self.hparams.conv_stride
-                      ),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-        )
+        self.encoder_conv = nn.Sequential(*conv_layers)
 
-        self.enc_linear = nn.Sequential(
-            nn.Linear(self.hidden_dim_enc, self.hparams.linear_layer_dim),
-            nn.ReLU()
-        )
-
-        self.mu = nn.Linear(self.hparams.linear_layer_dim, self.hparams.latent_dim)
-        self.log_var = nn.Linear(self.hparams.linear_layer_dim, self.hparams.latent_dim)
+        self.mu = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
+        self.log_var = nn.Linear(self.hidden_dim_enc, self.hparams.latent_dim)
 
     def _build_decoder(self):
-        self.dec_hidden1 = self.dec_hidden = nn.Sequential(
-            nn.Linear(in_features=self.hparams.latent_dim, out_features=self.hparams.linear_layer_dim),
+        self.decoder_linear = nn.Sequential(
+            nn.Linear(in_features=self.hparams.latent_dim, out_features=self.hidden_dim_enc),
             nn.ReLU())
 
-        self.dec_hidden2 = nn.Sequential(
-            nn.Linear(in_features=self.hparams.linear_layer_dim, out_features=self.hidden_dim_enc),
-            nn.ReLU())
+        conv_layers = []
 
-        self.dec_conv1 = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=32,
-                               out_channels=16,
+        for i in range(len(self.dec_channels) - 2):
+            conv_layers.append(nn.Sequential(
+                nn.ConvTranspose2d(in_channels=self.dec_channels[i],
+                                   out_channels=self.dec_channels[i + 1],
+                                   kernel_size=self.hparams.conv_kernel,
+                                   padding=self.hparams.conv_padding,
+                                   stride=self.hparams.conv_stride
+                                   ),
+                nn.ReLU(),
+                nn.BatchNorm2d(self.dec_channels[i + 1])
+            ))
+
+        conv_layers.append(nn.Sequential(
+            nn.ConvTranspose2d(in_channels=self.dec_channels[-2],
+                               out_channels=self.dec_channels[-1],
                                kernel_size=self.hparams.conv_kernel,
                                padding=self.hparams.conv_padding,
                                stride=self.hparams.conv_stride
-                               ),
-            nn.ReLU(),
-            nn.BatchNorm2d(16)
-        )
+                               )))
 
-        self.dec_conv2 = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=16,
-                               out_channels=8,
-                               kernel_size=self.hparams.conv_kernel,
-                               padding=self.hparams.conv_padding,
-                               stride=self.hparams.conv_stride
-                               ),
-            nn.ReLU(),
-            nn.BatchNorm2d(8),
-        )
-
-        self.dec_conv3 = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=8,
-                               out_channels=self.hparams.num_channels,
-                               kernel_size=self.hparams.conv_kernel,
-                               padding=self.hparams.conv_padding,
-                               stride=self.hparams.conv_stride
-                               ),
-        )
+        self.decoder_conv = nn.Sequential(*conv_layers)
 
     @staticmethod
     def _calculate_kl_loss(mean, log_variance):
         # calculate KL divergence
-        kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
-        kld = torch.mean(kld_batch)
+        # kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
+        # kld = torch.mean(kld_batch)
+
+        kld = (0.5 * (mean ** 2 + torch.exp(log_variance) - log_variance - 1)).sum()
 
         return kld
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":
-            return F.mse_loss(x, x_hat, reduction="mean")
+            return F.mse_loss(x, x_hat, reduction="sum")
         elif self.hparams.recon_loss.lower() == "l1":
             return F.l1_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "bce":
@@ -162,27 +140,21 @@ class SpectrogramVAE(pl.LightningModule):
         return self.dafx_list[idx]
 
     def encode(self, x):
-        x = self.enc_conv1(x)
-        x = self.enc_conv2(x)
-        x = self.enc_conv3(x)
+        x = self.encoder_conv(x)
 
-        x = x.view(-1, self.hidden_dim_enc)
+        x = x.reshape(-1, self.hidden_dim_enc)
 
-        x = self.enc_linear(x)
         mu = self.mu(x)
         log_var = self.log_var(x)
 
         return mu, log_var
 
     def decode(self, z):
-        x = self.dec_hidden1(z)
-        x = self.dec_hidden2(x)
+        x = self.decoder_linear(z)
 
         x = x.view(-1, *self.hidden_dim_dec)
 
-        x = self.dec_conv1(x)
-        x = self.dec_conv2(x)
-        x = self.dec_conv3(x)
+        x = self.decoder_conv(x)
 
         return x
 
@@ -197,25 +169,32 @@ class SpectrogramVAE(pl.LightningModule):
         z = self.reparameterise(mu, log_var)
         out = self.decode(z)
 
-        return out, mu, log_var
+        return out, mu, log_var, z
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
     def common_paired_step(
             self,
-            batch: Tuple,
+            batch: torch.Tensor,
             batch_idx: int,
             train: bool = False,
     ):
-        # Get spectrograms
+        # Get audio
         x = batch
 
+        # Get spectrograms
+        X = audio_to_spectrogram(signal=x,
+                                 n_fft=self.hparams.n_fft,
+                                 hop_length=self.hparams.hop_length,
+                                 window_size=self.hparams.window_size,
+                                 normalise_audio=self.hparams.normalise_audio)
+
         # Get reconstruction as well as mu, var
-        x_hat, x_mu, x_log_var = self(x)
+        X_hat, X_mu, X_log_var, _ = self(X)
 
         # Calculate recon losses for clean/effected signals
-        r_loss, kl_loss = self.calculate_loss(x_mu, x_log_var, x_hat, x)
+        r_loss, kl_loss = self.calculate_loss(X_mu, X_log_var, X_hat, X)
 
         # Total loss is additive
         loss = r_loss + (self.hparams.vae_beta * kl_loss)
@@ -270,16 +249,10 @@ class SpectrogramVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             train_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
             timeout=6000,
         )
 
@@ -292,11 +265,11 @@ class SpectrogramVAE(pl.LightningModule):
             subset="val",
             train_frac=self.hparams.train_frac,
             half=self.hparams.half,
-            length=self.hparams.train_length,
+            length=self.hparams.val_length,
             input_dirs=self.hparams.input_dirs,
             buffer_size_gb=self.hparams.buffer_size_gb,
             buffer_reload_rate=self.hparams.buffer_reload_rate,
-            num_examples_per_epoch=self.hparams.train_examples_per_epoch,
+            num_examples_per_epoch=self.hparams.val_examples_per_epoch,
             effect_audio=self.hparams.effect_audio,
             random_effect_threshold=self.hparams.random_effect_threshold,
             augmentations={},
@@ -304,17 +277,10 @@ class SpectrogramVAE(pl.LightningModule):
             dummy_setting=self.hparams.dummy_setting
         )
 
-        # g = torch.Generator()
-        # g.manual_seed(0)
-
         return torch.utils.data.DataLoader(
             val_dataset,
             num_workers=self.hparams.num_workers,
             batch_size=self.hparams.batch_size,
-            # worker_init_fn=utils.seed_worker,
-            # generator=g,
-            # pin_memory=True,
-            # persistent_workers=True,
             timeout=60,
         )
 
@@ -335,12 +301,17 @@ class SpectrogramVAE(pl.LightningModule):
 
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
-        parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 257))
-        parser.add_argument("--linear_layer_dim", type=int, default=1024)
-        parser.add_argument("--latent_dim", type=int, default=1024)
+        parser.add_argument("--hidden_dim", nargs="*", default=(32, 5, 129))
+        parser.add_argument("--latent_dim", type=int, default=32)
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
         parser.add_argument("--conv_stride", type=int, default=2)
+
+        # -------- Spectrogram ----------
+        parser.add_argument("--n_fft", type=int, default=4096)
+        parser.add_argument("--hop_length", type=int, default=2048)
+        parser.add_argument("--window_size", type=int, default=4096)
+        parser.add_argument("--normalise_audio", type=bool, default=True)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
@@ -356,9 +327,9 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_audio", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=10_000)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=131_072)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=100)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
         parser.add_argument("--num_workers", type=int, default=4)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 

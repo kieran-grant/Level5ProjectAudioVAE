@@ -104,7 +104,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
                 preload=False,
                 half=half,
             )
-            if audio_file.num_frames < (self.length):
+            if audio_file.num_frames < self.length:
                 continue
             input_files[file_id] = audio_file
             input_dur_frames += input_files[file_id].num_frames
@@ -189,7 +189,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
                 half=self.half,
             )
 
-            if audio_file.num_frames < (self.length):
+            if audio_file.num_frames < self.length:
                 continue
 
             self.input_files_loaded[file_id] = audio_file
