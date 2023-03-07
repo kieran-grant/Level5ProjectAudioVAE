@@ -98,13 +98,11 @@ class SpectrogramVAE(pl.LightningModule):
         # kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
         # kld = torch.mean(kld_batch)
 
-        kld = (0.5 * (mean ** 2 + torch.exp(log_variance) - log_variance - 1)).sum()
-
-        return kld
+        return torch.mean(-0.5 * torch.sum(1 + log_variance - mean ** 2 - log_variance.exp(), dim = 1), dim = 0)
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":
-            return F.mse_loss(x, x_hat, reduction="sum")
+            return F.mse_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "l1":
             return F.l1_loss(x, x_hat, reduction="mean")
         elif self.hparams.recon_loss.lower() == "bce":
