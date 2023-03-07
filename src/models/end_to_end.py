@@ -16,7 +16,7 @@ from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
 from src.models.style_transfer_vae import StyleTransferVAE
-from src.spsa.epsilon_scheduler import EpsilonScheduler
+from src.schedulers.epsilon_scheduler import EpsilonScheduler
 
 
 class EndToEndSystem(pl.LightningModule):

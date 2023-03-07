@@ -60,10 +60,14 @@ if __name__ == "__main__":
     args.normalise_audio = True
 
     args.num_channels = 1
-    args.latent_dim = 128
+    args.latent_dim = 256
 
-    args.vae_beta = 1e-3
     args.lr = 5e-5
+
+    args.min_beta = 1e-3
+    args.max_beta = 4.
+    args.beta_start_epoch = 50
+    args.beta_end_epoch = 250
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -77,6 +81,7 @@ if __name__ == "__main__":
         num_sanity_val_steps=0,
         max_epochs=300,
         accelerator='gpu',
+        gradient_clip_val=4.
     )
 
     # create the System

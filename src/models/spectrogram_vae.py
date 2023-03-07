@@ -11,6 +11,7 @@ from src.dataset.audio_dataset import AudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
 from src.utils import audio_to_spectrogram
+from src.schedulers.beta_annealing import BetaAnnealing
 
 
 # noinspection DuplicatedCode
@@ -19,6 +20,13 @@ class SpectrogramVAE(pl.LightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
+
+        self.beta_annealing = BetaAnnealing(
+            self.hparams.min_beta,
+            self.hparams.max_beta,
+            self.hparams.beta_start_epoch,
+            self.hparams.beta_end_epoch
+        )
 
         self._build_model()
 
@@ -195,12 +203,15 @@ class SpectrogramVAE(pl.LightningModule):
         r_loss, kl_loss = self.calculate_loss(X_mu, X_log_var, X_hat, X)
 
         # Total loss is additive
-        loss = r_loss + (self.hparams.vae_beta * kl_loss)
+        loss = r_loss + (self.beta_annealing.beta * kl_loss)
 
         # log the losses
         self.log(("train" if train else "val") + "_loss/loss", loss)
         self.log(("train" if train else "val") + "_loss/reconstruction_loss", r_loss)
         self.log(("train" if train else "val") + "_loss/kl_divergence", kl_loss)
+
+        # log current beta value
+        self.log("beta", self.beta_annealing.beta)
 
         return loss
 
@@ -212,6 +223,10 @@ class SpectrogramVAE(pl.LightningModule):
         )
 
         return loss
+
+    def training_epoch_end(self, training_step_outputs):
+        if self.hparams.beta_annealing:
+            self.beta_annealing.step(self.current_epoch)
 
     def validation_step(self, batch, batch_idx):
         loss = self.common_paired_step(
@@ -290,7 +305,13 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--batch_size", type=int, default=8)
         parser.add_argument("--lr", type=float, default=1e-5)
         parser.add_argument("--recon_loss", type=str, default="mse")
-        parser.add_argument("--vae_beta", type=float, default=1.)
+
+        # -------- Beta Annealing ---------
+        parser.add_argument("--beta_annealing", type=bool, default=True)
+        parser.add_argument("--min_beta", type=float, default=0.)
+        parser.add_argument("--max_beta", type=float, default=4.)
+        parser.add_argument("--beta_start_epoch", type=int, default=0)
+        parser.add_argument("--beta_end_epoch", type=int, default=100)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
