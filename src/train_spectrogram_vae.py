@@ -23,6 +23,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 1234
+MAX_EPOCHS = 150
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -76,8 +77,9 @@ if __name__ == "__main__":
 
     args.min_beta = 5e-4
     args.max_beta = 5e-2
-    args.beta_start_epoch = 300
-    args.beta_end_epoch = 400
+    args.beta_start_epoch = 0
+    args.beta_end_epoch = MAX_EPOCHS
+    args.cycle_length = 13
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -91,7 +93,7 @@ if __name__ == "__main__":
             # early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=400,
+        max_epochs=MAX_EPOCHS,
         accelerator='gpu',
         gradient_clip_val=4.
     )

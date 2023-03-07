@@ -9,6 +9,7 @@ from pedalboard.pedalboard import load_plugin
 
 from src.dataset.audio_dataset import AudioDataset
 from src.schedulers.beta_annealing import BetaAnnealing
+from src.schedulers.cyclic_annealing import CyclicAnnealing
 from src.utils import audio_to_spectrogram
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
@@ -21,12 +22,21 @@ class SpectrogramVAE(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        self.beta_annealing = BetaAnnealing(
-            self.hparams.min_beta,
-            self.hparams.max_beta,
-            self.hparams.beta_start_epoch,
-            self.hparams.beta_end_epoch
-        )
+        if self.hparams.annealing_type == 'cyclic':
+            self.beta_annealing = CyclicAnnealing(
+                self.hparams.min_beta,
+                self.hparams.max_beta,
+                self.hparams.beta_start_epoch,
+                self.hparams.beta_end_epoch,
+                self.hparams.beta_cycle_length
+            )
+        else:
+            self.beta_annealing = BetaAnnealing(
+                self.hparams.min_beta,
+                self.hparams.max_beta,
+                self.hparams.beta_start_epoch,
+                self.hparams.beta_end_epoch
+            )
 
         self._build_model()
 
@@ -308,10 +318,12 @@ class SpectrogramVAE(pl.LightningModule):
 
         # -------- Beta Annealing ---------
         parser.add_argument("--beta_annealing", type=bool, default=True)
+        parser.add_argument("--annealing_type", type=str, default='cyclic')
         parser.add_argument("--min_beta", type=float, default=0.)
         parser.add_argument("--max_beta", type=float, default=4.)
         parser.add_argument("--beta_start_epoch", type=int, default=0)
         parser.add_argument("--beta_end_epoch", type=int, default=100)
+        parser.add_argument("--cycle_length", type=int, default=11)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")

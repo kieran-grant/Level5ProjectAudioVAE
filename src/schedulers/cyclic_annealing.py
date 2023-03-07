@@ -24,9 +24,10 @@ class CyclicAnnealing:
             self.beta = self.min_beta
         else:
             progress_in_cycle = (current_epoch - self.start_epoch) % self.cycle_length / self.cycle_length
-            cosine_decay = 0.5 * (1 + math.cos(progress_in_cycle * math.pi))
+            cosine_decay = 0.5 * (1 + math.cos(math.pi * progress_in_cycle))
             new_beta = self.min_beta + cosine_decay * (self.max_beta - self.min_beta)
-            self.beta = new_beta
 
-            if current_epoch % self.cycle_length == 0:
-                print(f"\nStarting new cycle: Beta weight updated: {self.beta:.4f}\n")
+            if (current_epoch - self.start_epoch) % self.cycle_length == 0:
+                print(f"\nNew cycle started, beta weight updated: {self.beta:.4f} -> {new_beta:.4f}\n")
+
+            self.beta = new_beta
