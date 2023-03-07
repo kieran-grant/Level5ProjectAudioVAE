@@ -62,7 +62,7 @@ if __name__ == "__main__":
     args.num_channels = 1
     args.latent_dim = 256
 
-    args.lr = 5e-5
+    args.lr = 1e-4
 
     args.min_beta = 1e-3
     args.max_beta = 4.
