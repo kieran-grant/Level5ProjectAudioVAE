@@ -8,10 +8,10 @@ import torch.nn.functional as F
 from pedalboard.pedalboard import load_plugin
 
 from src.dataset.audio_dataset import AudioDataset
+from src.schedulers.beta_annealing import BetaAnnealing
+from src.utils import audio_to_spectrogram
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
-from src.utils import audio_to_spectrogram
-from src.schedulers.beta_annealing import BetaAnnealing
 
 
 # noinspection DuplicatedCode
@@ -106,7 +106,7 @@ class SpectrogramVAE(pl.LightningModule):
         # kld_batch = -0.5 * torch.sum(1 + log_variance - torch.square(mean) - torch.exp(log_variance), dim=1)
         # kld = torch.mean(kld_batch)
 
-        return torch.mean(-0.5 * torch.sum(1 + log_variance - mean ** 2 - log_variance.exp(), dim = 1), dim = 0)
+        return torch.mean(-0.5 * torch.sum(1 + log_variance - mean ** 2 - log_variance.exp(), dim=1), dim=0)
 
     def _calculate_reconstruction_loss(self, x, x_hat):
         if self.hparams.recon_loss.lower() == "mse":

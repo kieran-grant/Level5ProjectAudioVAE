@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
 from src.models.spectrogram_vae import SpectrogramVAE
@@ -28,16 +28,6 @@ if __name__ == "__main__":
     pl.seed_everything(SEED)
     torch.set_float32_matmul_precision('medium')
 
-    # callbacks
-    wandb_logger = WandbLogger(name='vctk_4dafx_plus_clean_random_settings', project='l5proj_spectrogram_vae')
-    # wandb_logger = None
-
-    checkpoint_callback = ModelCheckpoint(monitor="val_loss/loss", mode="min")
-    early_stopping = EarlyStopping(
-        monitor="val_loss/loss",
-        mode="min",
-        patience=100)
-
     # arg parse for config
     parser = ArgumentParser()
 
@@ -48,6 +38,31 @@ if __name__ == "__main__":
     # Parse
     args = parser.parse_args()
 
+    # callbacks
+    wandb_logger = WandbLogger(name='vctk_4dafx_plus_clean_random_settings', project='l5proj_spectrogram_vae')
+    # wandb_logger = None
+
+    # early_stopping = EarlyStopping(
+    #     monitor="val_loss/loss",
+    #     mode="min",
+    #     patience=100)
+
+    validation_callback = ModelCheckpoint(
+        monitor="val_loss/loss",
+        filename="{epoch}-{step}",
+        mode="min"
+    )
+    recon_checkpoint = ModelCheckpoint(
+        monitor="val_loss/reconstruction_loss",
+        filename="best_recon-{epoch}-{step}",
+        mode="min"
+    )
+    kl_checkpoint = ModelCheckpoint(
+        monitor="val_loss/kl_divergence",
+        filename="best_kldiv-{epoch}-{step}",
+        mode="min"
+    )
+
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
@@ -55,19 +70,14 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.effect_audio = True
-    args.dummy_setting = False
-    args.normalise_audio = True
-
-    args.num_channels = 1
     args.latent_dim = 256
 
-    args.lr = 1e-4
+    args.lr = 3e-4
 
     args.min_beta = 1e-3
-    args.max_beta = 4.
-    args.beta_start_epoch = 50
-    args.beta_end_epoch = 250
+    args.max_beta = 5e-1
+    args.beta_start_epoch = 100
+    args.beta_end_epoch = 200
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -75,11 +85,13 @@ if __name__ == "__main__":
         reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
-            checkpoint_callback,
-            early_stopping
+            validation_callback,
+            recon_checkpoint,
+            kl_checkpoint,
+            # early_stopping
         ],
         num_sanity_val_steps=0,
-        max_epochs=300,
+        max_epochs=400,
         accelerator='gpu',
         gradient_clip_val=4.
     )

@@ -20,7 +20,7 @@ class BetaAnnealing:
             frac_epochs = (current_epoch - self.start_epoch) / (self.end_epoch - self.start_epoch)
             new_beta = self.min_beta + frac_epochs * (self.max_beta - self.min_beta)
 
-            print(f"Beta weight updated: {old_beta:.4f} -> {new_beta:.4f}")
+            print(f"\nBeta weight updated: {old_beta:.4f} -> {new_beta:.4f}\n")
             self.beta = new_beta
             if current_epoch == self.end_epoch:
-                print(f"Beta maximum value reached: {self.beta}")
+                print(f"\nBeta maximum value reached: {self.beta}\n")
