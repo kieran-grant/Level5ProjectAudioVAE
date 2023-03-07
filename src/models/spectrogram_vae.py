@@ -302,7 +302,7 @@ class SpectrogramVAE(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
 
         # -------- Training -----------
-        parser.add_argument("--batch_size", type=int, default=8)
+        parser.add_argument("--batch_size", type=int, default=12)
         parser.add_argument("--lr", type=float, default=1e-5)
         parser.add_argument("--recon_loss", type=str, default="mse")
 

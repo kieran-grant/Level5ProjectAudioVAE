@@ -70,14 +70,14 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 256
+    args.latent_dim = 128
 
     args.lr = 3e-4
 
-    args.min_beta = 1e-3
-    args.max_beta = 5e-1
-    args.beta_start_epoch = 100
-    args.beta_end_epoch = 200
+    args.min_beta = 5e-4
+    args.max_beta = 5e-2
+    args.beta_start_epoch = 300
+    args.beta_end_epoch = 400
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
