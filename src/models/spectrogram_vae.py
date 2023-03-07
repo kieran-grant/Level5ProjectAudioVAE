@@ -323,7 +323,7 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--max_beta", type=float, default=4.)
         parser.add_argument("--beta_start_epoch", type=int, default=0)
         parser.add_argument("--beta_end_epoch", type=int, default=100)
-        parser.add_argument("--cycle_length", type=int, default=11)
+        parser.add_argument("--beta_cycle_length", type=int, default=11)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")

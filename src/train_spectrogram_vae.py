@@ -79,7 +79,7 @@ if __name__ == "__main__":
     args.max_beta = 5e-2
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
-    args.cycle_length = 13
+    args.beta_cycle_length = 13
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
