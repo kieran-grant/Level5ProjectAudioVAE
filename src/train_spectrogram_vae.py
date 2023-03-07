@@ -71,12 +71,12 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 128
+    args.latent_dim = 512
 
-    args.lr = 3e-4
+    args.lr = 1e-4
 
-    args.min_beta = 5e-4
-    args.max_beta = 5e-2
+    args.min_beta = 1e-4
+    args.max_beta = 1e-2
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 13
