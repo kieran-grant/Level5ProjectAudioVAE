@@ -23,7 +23,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 1234
-MAX_EPOCHS = 400
+MAX_EPOCHS = 200
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -71,15 +71,15 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 32
+    args.latent_dim = 64
 
-    args.lr = 1e-4
+    args.lr = 3e-4
 
-    args.min_beta = 3e-4
-    args.max_beta = 3e-2
+    args.min_beta = 1e-5
+    args.max_beta = 1e-3
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
-    args.beta_cycle_length = 13
+    args.beta_cycle_length = 37
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
