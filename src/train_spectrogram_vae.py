@@ -48,7 +48,7 @@ if __name__ == "__main__":
     #     mode="min",
     #     patience=100)
 
-    validation_callback = ModelCheckpoint(
+    val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
         filename="{epoch}-{step}",
         mode="min"
@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     args.lr = 1e-4
 
-    args.min_beta = 1e-4
-    args.max_beta = 1e-2
+    args.min_beta = 3e-4
+    args.max_beta = 3e-2
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 13
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
-            validation_callback,
+            val_checkpoint,
             recon_checkpoint,
             kl_checkpoint,
             # early_stopping

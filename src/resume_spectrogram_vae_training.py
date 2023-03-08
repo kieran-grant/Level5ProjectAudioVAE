@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # callbacks
     wandb_logger = WandbLogger(name='vctk_4dafx_plus_clean_random_settings', project='l5proj_spectrogram_vae')
 
-    validation_callback = ModelCheckpoint(
+    val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
         filename="{epoch}-{step}",
         mode="min"
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
-            validation_callback,
+            val_checkpoint,
             recon_checkpoint,
             kl_checkpoint,
             # early_stopping
