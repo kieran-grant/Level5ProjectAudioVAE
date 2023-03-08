@@ -8,8 +8,8 @@ from pytorch_lightning.loggers import WandbLogger
 from src.models.spectrogram_vae import SpectrogramVAE
 
 SEED = 1234
-CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_spectrogram_vae/h4u6vidz/checkpoints/epoch=117-step=24662.ckpt"
-MAX_EPOCHS = 1_000
+CHECKPOINT = "/home/kieran/Level5ProjectAudioVAE/src/l5proj_spectrogram_vae/k20ypr7z/checkpoints/epoch=37-step=7942.ckpt"
+MAX_EPOCHS = 400
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
