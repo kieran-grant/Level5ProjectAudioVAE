@@ -24,7 +24,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 123
-MAX_EPOCHS = 10
+MAX_EPOCHS = 300
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
