@@ -59,6 +59,7 @@ def audio_to_spectrogram(signal: torch.Tensor,
         signal.view(bs, -1),
         n_fft=n_fft,
         hop_length=hop_length,
+        win_length=window_size,
         window=window,
         return_complex=True,
     )

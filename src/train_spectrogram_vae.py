@@ -5,25 +5,26 @@ import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
+from src.callbacks.spectrogram_callback import LogSpectrogramCallback
 from src.models.spectrogram_vae import SpectrogramVAE
 
 DAFX_TO_USE = [
     # 'mda MultiBand',
-    'clean',
+    # 'clean',
     'mda Delay',
     'mda Overdrive',
-    # # 'mda Ambience',
-    'mda RingMod',
+    'mda Ambience',
+    # 'mda RingMod',
     # 'mda Leslie',
-    # 'mda Combo',
+    'mda Combo',
     # 'mda Thru-Zero Flanger',
     # 'mda Loudness',
-    # 'mda Limiter'
+    # 'mda Limiter',
     'mda Dynamics',
 ]
 
-SEED = 1234
-MAX_EPOCHS = 200
+SEED = 123
+MAX_EPOCHS = 10
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # callbacks
-    wandb_logger = WandbLogger(name='vctk_4dafx_plus_clean_random_settings', project='l5proj_spectrogram_vae')
+    wandb_logger = WandbLogger(name='spectrogram_test', project='l5proj_spectrogram_vae')
     # wandb_logger = None
 
     # early_stopping = EarlyStopping(
@@ -71,15 +72,22 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 64
+    args.latent_dim = 128
 
-    args.lr = 3e-4
+    args.lr = 5e-4
 
-    args.min_beta = 1e-5
+    args.min_beta = 1e-4
     args.max_beta = 1e-3
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
-    args.beta_cycle_length = 37
+    args.beta_cycle_length = 17
+
+    args.hop_length = 1024
+    args.window_size = 2048
+    args.hidden_dim = (32, 9, 129)
+
+    args.train_examples_per_epoch = 100
+    args.val_examples_per_epoch = 10
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -87,6 +95,7 @@ if __name__ == "__main__":
         reload_dataloaders_every_n_epochs=1,
         logger=wandb_logger,
         callbacks=[
+            LogSpectrogramCallback(),
             val_checkpoint,
             recon_checkpoint,
             kl_checkpoint,
@@ -95,7 +104,7 @@ if __name__ == "__main__":
         num_sanity_val_steps=0,
         max_epochs=MAX_EPOCHS,
         accelerator='gpu',
-        gradient_clip_val=4.
+        gradient_clip_val=5.
     )
 
     # create the System

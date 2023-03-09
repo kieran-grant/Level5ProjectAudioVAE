@@ -158,6 +158,8 @@ class SpectrogramVAE(pl.LightningModule):
     def encode(self, x):
         x = self.encoder_conv(x)
 
+        # print(x.shape)
+
         x = x.reshape(-1, self.hidden_dim_enc)
 
         mu = self.mu(x)
@@ -223,10 +225,16 @@ class SpectrogramVAE(pl.LightningModule):
         # log current beta value
         self.log("beta", self.beta_annealing.beta)
 
-        return loss
+        data_dict = {
+            "x": X.cpu(),
+            "x_hat": X_hat.cpu(),
+            "dafx": self.current_dafx.split()[-1]
+        }
+
+        return loss, data_dict
 
     def training_step(self, batch, batch_idx):
-        loss = self.common_paired_step(
+        loss, _ = self.common_paired_step(
             batch,
             batch_idx,
             train=True,
@@ -239,13 +247,13 @@ class SpectrogramVAE(pl.LightningModule):
             self.beta_annealing.step(self.current_epoch)
 
     def validation_step(self, batch, batch_idx):
-        loss = self.common_paired_step(
+        loss, data_dict = self.common_paired_step(
             batch,
             batch_idx,
             train=False,
         )
 
-        return loss
+        return data_dict
 
     def train_dataloader(self):
         # Return dataloader based on epoch??

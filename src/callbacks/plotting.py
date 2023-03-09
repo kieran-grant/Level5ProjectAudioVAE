@@ -5,6 +5,7 @@ import numpy as np
 import scipy.signal
 import librosa.display
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 from torch.functional import Tensor
 from torchvision.transforms import ToTensor
@@ -54,6 +55,52 @@ def compute_comparison_spectrogram(
 
     return image
 
+
+def plot_spectrogram_reconstruction(
+    X: torch.Tensor,
+    X_hat: torch.Tensor,
+    fx_name: str,
+):
+    fig, axes = plt.subplots(2, 1)
+
+    # calculate error
+    mse = F.mse_loss(X.squeeze(), X_hat.squeeze())
+
+    # find minimum of minima & maximum of maxima
+    minmin = min([torch.min(X).item(), torch.min(X_hat).item()])
+    maxmax = max([torch.max(X).item(), torch.max(X_hat).item()])
+
+    axes[0].imshow(X.squeeze().cpu().detach().numpy(),
+                            aspect='auto',
+                            vmin=minmin,
+                            vmax=maxmax,
+                            )
+
+    axes[1].imshow(X_hat.squeeze().cpu().detach().numpy(),
+                            aspect='auto',
+                            vmin=minmin,
+                            vmax=maxmax
+                            )
+
+    axes[0].set_title(f"Original {fx_name}", fontsize=10)
+    axes[1].set_title(f"Reconstruction {fx_name} (MSE: {mse.item():.4f})", fontsize=10)
+
+    axes[0].set_xticks([])
+    axes[0].set_yticks([])
+
+    axes[1].set_xticks([])
+    axes[1].set_yticks([])
+
+    plt.tight_layout()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="jpeg")
+    buf.seek(0)
+    image = PIL.Image.open(buf)
+    image = ToTensor()(image)
+    plt.close("all")
+
+    return image
 
 def plot_multi_spectrum(
     ys=None,
