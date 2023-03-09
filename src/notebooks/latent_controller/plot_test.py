@@ -8,7 +8,7 @@ sns.set(style='white', context='poster')
 
 class NoOpUMAPWrapper:
     def __init__(self,
-                 num_examples=100,
+                 num_examples=10_000,
                  latent_size=128,
                  audio_dir="./plot_test_audio",
                  audio_length_sec=5,
