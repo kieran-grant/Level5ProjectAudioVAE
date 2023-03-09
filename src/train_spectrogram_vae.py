@@ -14,7 +14,7 @@ DAFX_TO_USE = [
     'mda Delay',
     'mda Overdrive',
     'mda Ambience',
-    # 'mda RingMod',
+    'mda RingMod',
     # 'mda Leslie',
     'mda Combo',
     # 'mda Thru-Zero Flanger',
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # callbacks
-    wandb_logger = WandbLogger(name='spectrogram_test', project='l5proj_spectrogram_vae')
+    wandb_logger = WandbLogger(name='vtck_5fx_plsnl_short_wind', project='l5proj_spectrogram_vae')
     # wandb_logger = None
 
     # early_stopping = EarlyStopping(
@@ -85,9 +85,9 @@ if __name__ == "__main__":
     args.hop_length = 1024
     args.window_size = 2048
     args.hidden_dim = (32, 9, 129)
-
-    args.train_examples_per_epoch = 100
-    args.val_examples_per_epoch = 10
+    #
+    # args.train_examples_per_epoch = 100
+    # args.val_examples_per_epoch = 10
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
