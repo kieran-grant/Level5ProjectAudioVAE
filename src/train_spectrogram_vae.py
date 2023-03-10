@@ -10,7 +10,7 @@ from src.models.spectrogram_vae import SpectrogramVAE
 
 DAFX_TO_USE = [
     # 'mda MultiBand',
-    # 'clean',
+    'clean',
     'mda Delay',
     'mda Overdrive',
     'mda Ambience',
@@ -24,7 +24,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 123
-MAX_EPOCHS = 600
+MAX_EPOCHS = 800
 
 if __name__ == "__main__":
     pl.seed_everything(SEED)
@@ -72,12 +72,12 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 512
+    args.latent_dim = 128
 
     args.lr = 5e-4
 
     args.min_beta = 1e-4
-    args.max_beta = 5e-2
+    args.max_beta = 7e-4
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17
