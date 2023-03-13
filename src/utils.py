@@ -48,7 +48,6 @@ def audio_to_spectrogram(signal: torch.Tensor,
                          hop_length: int = 2048,
                          window_size: int = 4096,
                          normalise_audio: bool = True):
-
     bs, _, _ = signal.size()
 
     if normalise_audio:
@@ -75,11 +74,15 @@ def audio_to_spectrogram(signal: torch.Tensor,
 
     return X_db_norm
 
+
 def audio_to_mel_spectrogram(signal: torch.Tensor,
                              sample_rate: int = 24_000,
                              n_mels: int = 128,
+                             n_fft: int = 4096,
+                             win_length: int = 1024,
+                             f_max=18_000,
+                             f_min=20,
                              normalise_audio: bool = True):
-
     bs, _, _ = signal.size()
 
     if normalise_audio:
@@ -87,7 +90,11 @@ def audio_to_mel_spectrogram(signal: torch.Tensor,
 
     transform = torchaudio.transforms.MelSpectrogram(
         sample_rate=sample_rate,
-        n_mels=n_mels).to(signal.device)
+        n_mels=n_mels,
+        n_fft=n_fft,
+        win_length=win_length,
+        f_max=f_max,
+        f_min=f_min).to(signal.device)
 
     X = transform(signal)
 

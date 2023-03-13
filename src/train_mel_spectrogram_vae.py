@@ -70,15 +70,16 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 64
+    args.latent_dim = 128
 
     args.lr = 5e-4
 
-    args.min_beta = 1e-4
-    args.max_beta = 5e-3
+    args.min_beta = 0
+    args.max_beta = 5e-4
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17
+    args.hidden_dim = (32, 15, 16)
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -98,11 +99,13 @@ if __name__ == "__main__":
         gradient_clip_val=5.
     )
 
+
+
     # create the System
     system = MelSpectrogramVAE(**vars(args))
 
-    print(torchsummary.summary(system, input_size=(1, 656, 128), device='cpu'))
+    print(torchsummary.summary(system, input_size=(1, 235, 256), device='cpu'))
     # print(system)
 
     # train!
-    trainer.fit(system)
+    # trainer.fit(system)

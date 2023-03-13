@@ -87,6 +87,7 @@ class MelSpectrogramVAE(pl.LightningModule):
             nn.ReLU())
 
         conv_layers = []
+        out_pads = [1,0,0,1]
 
         for i in range(len(self.dec_channels) - 2):
             conv_layers.append(nn.Sequential(
@@ -95,7 +96,7 @@ class MelSpectrogramVAE(pl.LightningModule):
                                    kernel_size=self.hparams.conv_kernel,
                                    padding=self.hparams.conv_padding,
                                    stride=self.hparams.conv_stride,
-                                   output_padding=1
+                                   output_padding=out_pads[i]
                                    ),
                 nn.ReLU(),
                 nn.BatchNorm2d(self.dec_channels[i + 1])
@@ -160,6 +161,7 @@ class MelSpectrogramVAE(pl.LightningModule):
     def encode(self, x):
         x = self.encoder_conv(x)
 
+        print(x.shape)
         x = x.reshape(-1, self.hidden_dim_enc)
 
         mu = self.mu(x)
@@ -204,7 +206,11 @@ class MelSpectrogramVAE(pl.LightningModule):
         # Get spectrograms
         X = audio_to_mel_spectrogram(signal=x,
                                      sample_rate=self.hparams.sample_rate,
-                                     n_mels=self.hparams.n_mels)
+                                     n_mels=self.hparams.n_mels,
+                                     n_fft=self.hparams.n_fft,
+                                     win_length=self.hparams.win_length,
+                                     f_max=self.hparams.f_max,
+                                     f_min=self.hparams.f_min)
 
         # Get reconstruction as well as mu, var
         X_hat, X_mu, X_log_var, _ = self(X)
@@ -346,6 +352,10 @@ class MelSpectrogramVAE(pl.LightningModule):
 
         # -------- Spectrogram ----------
         parser.add_argument("--n_mels", type=int, default=128)
+        parser.add_argument("--n_fft", type=int, default=4096)
+        parser.add_argument("--win_length", type=int, default=1024)
+        parser.add_argument("--f_max", type=int, default=12_000)
+        parser.add_argument("--f_min", type=int, default=20)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
