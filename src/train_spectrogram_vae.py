@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import torch
+import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
@@ -10,7 +11,7 @@ from src.models.spectrogram_vae import SpectrogramVAE
 
 DAFX_TO_USE = [
     # 'mda MultiBand',
-    'clean',
+    # 'clean',
     'mda Delay',
     'mda Overdrive',
     'mda Ambience',
@@ -27,6 +28,7 @@ SEED = 123
 MAX_EPOCHS = 800
 
 if __name__ == "__main__":
+    wandb.require("service")
     pl.seed_everything(SEED)
     torch.set_float32_matmul_precision('medium')
 
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     args.lr = 5e-4
 
     args.min_beta = 1e-4
-    args.max_beta = 7e-4
+    args.max_beta = 5e-3
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17

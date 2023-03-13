@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torchaudio
 
 from torchaudio.transforms import MFCC
 
@@ -71,6 +72,32 @@ def audio_to_spectrogram(signal: torch.Tensor,
     X_db_norm = (X_db - X_db.mean()) / X_db.std()
 
     X_db_norm = X_db_norm.unsqueeze(1).permute(0, 1, 3, 2)
+
+    return X_db_norm
+
+def audio_to_mel_spectrogram(signal: torch.Tensor,
+                             sample_rate: int = 24_000,
+                             n_mels: int = 128,
+                             normalise_audio: bool = True):
+
+    bs, _, _ = signal.size()
+
+    if normalise_audio:
+        signal = peak_normalise(signal)
+
+    transform = torchaudio.transforms.MelSpectrogram(
+        sample_rate=sample_rate,
+        n_mels=n_mels).to(signal.device)
+
+    X = transform(signal)
+
+    # Absolute value part
+    X_db = torch.pow(X.abs() + 1e-8, 0.3)
+
+    # # Normalise (0,1)
+    X_db_norm = (X_db - X_db.mean()) / X_db.std()
+
+    X_db_norm = X_db_norm.permute(0, 1, 3, 2)
 
     return X_db_norm
 
