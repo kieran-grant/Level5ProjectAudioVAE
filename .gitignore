@@ -137,3 +137,4 @@ configs
 *.ckpt
 MNIST
 .idea
+src/vqvae_tester/data

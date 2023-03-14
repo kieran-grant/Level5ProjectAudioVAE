@@ -161,7 +161,6 @@ class MelSpectrogramVAE(pl.LightningModule):
     def encode(self, x):
         x = self.encoder_conv(x)
 
-        print(x.shape)
         x = x.reshape(-1, self.hidden_dim_enc)
 
         mu = self.mu(x)
@@ -351,7 +350,7 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--conv_stride", type=int, default=2)
 
         # -------- Spectrogram ----------
-        parser.add_argument("--n_mels", type=int, default=128)
+        parser.add_argument("--n_mels", type=int, default=256)
         parser.add_argument("--n_fft", type=int, default=4096)
         parser.add_argument("--win_length", type=int, default=1024)
         parser.add_argument("--f_max", type=int, default=12_000)

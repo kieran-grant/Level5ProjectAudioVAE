@@ -15,10 +15,10 @@ DAFX_TO_USE = [
     # 'clean',
     'mda Delay',
     'mda Overdrive',
-    'mda Ambience',
+    # 'mda Ambience',
     'mda RingMod',
     # 'mda Leslie',
-    'mda Combo',
+    # 'mda Combo',
     # 'mda Thru-Zero Flanger',
     # 'mda Loudness',
     # 'mda Limiter',
@@ -26,7 +26,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 123
-MAX_EPOCHS = 300
+MAX_EPOCHS = 200
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # callbacks
-    wandb_logger = WandbLogger(name='vtck_6fx', project='l5proj_melspec_vae')
+    wandb_logger = WandbLogger(name='256x256_vtck_4fx', project='l5proj_melspec_vae')
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -73,8 +73,8 @@ if __name__ == "__main__":
 
     args.lr = 5e-4
 
-    args.min_beta = 0
-    args.max_beta = 5e-4
+    args.min_beta = 0.
+    args.max_beta = 2.5e-4
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17
@@ -101,7 +101,6 @@ if __name__ == "__main__":
     system = MelSpectrogramVAE(**vars(args))
 
     print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
-    # print(system)
 
     # train!
-    # trainer.fit(system)
+    trainer.fit(system)
