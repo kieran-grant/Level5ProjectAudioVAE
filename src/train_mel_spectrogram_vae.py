@@ -45,7 +45,6 @@ if __name__ == "__main__":
 
     # callbacks
     wandb_logger = WandbLogger(name='vtck_6fx', project='l5proj_melspec_vae')
-    # wandb_logger = None
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -79,7 +78,6 @@ if __name__ == "__main__":
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17
-    args.hidden_dim = (32, 15, 16)
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -99,12 +97,10 @@ if __name__ == "__main__":
         gradient_clip_val=5.
     )
 
-
-
     # create the System
     system = MelSpectrogramVAE(**vars(args))
 
-    print(torchsummary.summary(system, input_size=(1, 235, 256), device='cpu'))
+    print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
     # print(system)
 
     # train!

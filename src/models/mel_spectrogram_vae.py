@@ -54,6 +54,7 @@ class MelSpectrogramVAE(pl.LightningModule):
         channels = [self.hparams.num_channels, 16, 16, 32, 32]
         self.enc_channels = channels
         self.dec_channels = channels[::-1]
+        self.out_pads = [1,1,1,1]
 
     def _build_dafx(self):
         # Load instances for each type of DAFX
@@ -87,7 +88,6 @@ class MelSpectrogramVAE(pl.LightningModule):
             nn.ReLU())
 
         conv_layers = []
-        out_pads = [1,0,0,1]
 
         for i in range(len(self.dec_channels) - 2):
             conv_layers.append(nn.Sequential(
@@ -96,7 +96,7 @@ class MelSpectrogramVAE(pl.LightningModule):
                                    kernel_size=self.hparams.conv_kernel,
                                    padding=self.hparams.conv_padding,
                                    stride=self.hparams.conv_stride,
-                                   output_padding=out_pads[i]
+                                   output_padding=self.out_pads[i]
                                    ),
                 nn.ReLU(),
                 nn.BatchNorm2d(self.dec_channels[i + 1])
@@ -108,7 +108,7 @@ class MelSpectrogramVAE(pl.LightningModule):
                                kernel_size=self.hparams.conv_kernel,
                                padding=self.hparams.conv_padding,
                                stride=self.hparams.conv_stride,
-                               output_padding=1
+                               output_padding=self.out_pads[-1]
                                )))
 
         self.decoder_conv = nn.Sequential(*conv_layers)
@@ -344,7 +344,7 @@ class MelSpectrogramVAE(pl.LightningModule):
 
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
-        parser.add_argument("--hidden_dim", nargs="*", default=(32, 41, 8))
+        parser.add_argument("--hidden_dim", nargs="*", default=(32, 16, 16))
         parser.add_argument("--latent_dim", type=int, default=32)
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
@@ -367,12 +367,12 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--dsp_sample_rate", type=int, default=24_000)
         parser.add_argument("--shuffle", type=bool, default=True)
         parser.add_argument("--random_effect_threshold", type=float, default=0.)
-        parser.add_argument("--train_length", type=int, default=131_072)
+        parser.add_argument("--train_length", type=int, default=130_560)
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_audio", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
         parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
-        parser.add_argument("--val_length", type=int, default=131_072)
+        parser.add_argument("--val_length", type=int, default=130_560)
         parser.add_argument("--val_examples_per_epoch", type=int, default=250)
         parser.add_argument("--num_workers", type=int, default=4)
         parser.add_argument("--dummy_setting", type=bool, default=False)
