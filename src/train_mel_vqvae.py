@@ -10,7 +10,7 @@ from src.callbacks.spectrogram_callback import LogSpectrogramCallback
 from src.models.vqvae.mel_spec_vqvae import MelSpecVQVAE
 
 DAFX_TO_USE = [
-    # 'mda MultiBand',
+    'mda MultiBand',
     # 'clean',
     'mda Delay',
     'mda Overdrive',
@@ -21,7 +21,7 @@ DAFX_TO_USE = [
     'mda Thru-Zero Flanger',
     # 'mda Loudness',
     # 'mda Limiter',
-    'mda Dynamics',
+    # 'mda Dynamics',
 ]
 
 SEED = 1234
