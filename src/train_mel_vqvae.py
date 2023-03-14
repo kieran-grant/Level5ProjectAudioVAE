@@ -25,7 +25,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 1234
-MAX_EPOCHS = 100
+MAX_EPOCHS = 300
 
 if __name__ == "__main__":
     wandb.require("service")
