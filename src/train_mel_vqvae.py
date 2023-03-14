@@ -25,7 +25,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 1234
-MAX_EPOCHS = 300
+MAX_EPOCHS = 30
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # callbacks
-    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx', project='l5proj_MelSpecVQVAE')
+    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx_xxxsmall', project='l5proj_MelSpecVQVAE')
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -57,6 +57,12 @@ if __name__ == "__main__":
     args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
+
+    args.num_hiddens = 4
+    args.num_residual_hiddens = 2
+    args.num_residual_layers = 8
+    args.embedding_dim = 4
+    args.num_embeddings = 4096
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
