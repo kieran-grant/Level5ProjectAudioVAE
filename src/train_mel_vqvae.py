@@ -18,13 +18,13 @@ DAFX_TO_USE = [
     'mda RingMod',
     # 'mda Leslie',
     # 'mda Combo',
-    # 'mda Thru-Zero Flanger',
+    'mda Thru-Zero Flanger',
     # 'mda Loudness',
     # 'mda Limiter',
     'mda Dynamics',
 ]
 
-SEED = 123
+SEED = 1234
 MAX_EPOCHS = 100
 
 if __name__ == "__main__":
@@ -71,15 +71,13 @@ if __name__ == "__main__":
         num_sanity_val_steps=0,
         max_epochs=MAX_EPOCHS,
         accelerator='gpu',
-        gradient_clip_val=5.
+        gradient_clip_val=3.
     )
 
     # create the System
     system = MelSpecVQVAE(**vars(args))
 
     print(system)
-    #
-    # print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
 
     # train!
     trainer.fit(system)

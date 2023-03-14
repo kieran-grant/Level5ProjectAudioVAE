@@ -197,8 +197,8 @@ class MelSpecVQVAE(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
 
         # -------- Training -----------
-        parser.add_argument("--batch_size", type=int, default=12)
-        parser.add_argument("--lr", type=float, default=1e-3)
+        parser.add_argument("--batch_size", type=int, default=16)
+        parser.add_argument("--lr", type=float, default=5e-4)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
@@ -235,10 +235,10 @@ class MelSpecVQVAE(pl.LightningModule):
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_audio", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=130_560)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=250)
-        parser.add_argument("--num_workers", type=int, default=4)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
+        parser.add_argument("--num_workers", type=int, default=8)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 
         return parser
