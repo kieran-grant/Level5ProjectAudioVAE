@@ -323,8 +323,8 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
 
         # -------- Training -----------
-        parser.add_argument("--batch_size", type=int, default=12)
-        parser.add_argument("--lr", type=float, default=1e-5)
+        parser.add_argument("--batch_size", type=int, default=16)
+        parser.add_argument("--lr", type=float, default=5e-4)
         parser.add_argument("--recon_loss", type=str, default="mse")
 
         # -------- Beta Annealing ---------
@@ -341,6 +341,13 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--dafx_names", nargs="*")
         parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
+        # -------- Spectrogram ----------
+        parser.add_argument("--n_mels", type=int, default=256)
+        parser.add_argument("--n_fft", type=int, default=4096)
+        parser.add_argument("--win_length", type=int, default=1024)
+        parser.add_argument("--f_max", type=int, default=12_000)
+        parser.add_argument("--f_min", type=int, default=20)
+
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
         parser.add_argument("--hidden_dim", nargs="*", default=(32, 16, 16))
@@ -348,13 +355,6 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
         parser.add_argument("--conv_stride", type=int, default=2)
-
-        # -------- Spectrogram ----------
-        parser.add_argument("--n_mels", type=int, default=256)
-        parser.add_argument("--n_fft", type=int, default=4096)
-        parser.add_argument("--win_length", type=int, default=1024)
-        parser.add_argument("--f_max", type=int, default=12_000)
-        parser.add_argument("--f_min", type=int, default=20)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
@@ -370,10 +370,10 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_audio", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=130_560)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=250)
-        parser.add_argument("--num_workers", type=int, default=4)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
+        parser.add_argument("--num_workers", type=int, default=8)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 
         return parser

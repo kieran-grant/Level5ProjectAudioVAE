@@ -10,23 +10,10 @@ from pytorch_lightning.loggers import WandbLogger
 from src.callbacks.spectrogram_callback import LogSpectrogramCallback
 from src.models.mel_spectrogram_vae import MelSpectrogramVAE
 
-DAFX_TO_USE = [
-    # 'mda MultiBand',
-    # 'clean',
-    'mda Delay',
-    'mda Overdrive',
-    # 'mda Ambience',
-    'mda RingMod',
-    # 'mda Leslie',
-    # 'mda Combo',
-    # 'mda Thru-Zero Flanger',
-    # 'mda Loudness',
-    # 'mda Limiter',
-    'mda Dynamics',
-]
+DAFX_TO_USE = ['mda Delay', 'mda Overdrive', 'mda RingMod', 'mda MultiBand']
 
 SEED = 123
-MAX_EPOCHS = 200
+MAX_EPOCHS = 300
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -44,7 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # callbacks
-    wandb_logger = WandbLogger(name='256x256_vtck_4fx', project='l5proj_melspec_vae')
+    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx', project='l5proj_melspec_vae')
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -69,12 +56,12 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 128
+    args.latent_dim = 256
 
-    args.lr = 5e-4
+    args.lr = 1e-3
 
-    args.min_beta = 0.
-    args.max_beta = 2.5e-4
+    args.min_beta = 1e-4
+    args.max_beta = 5e-4
     args.beta_start_epoch = 0
     args.beta_end_epoch = MAX_EPOCHS
     args.beta_cycle_length = 17
