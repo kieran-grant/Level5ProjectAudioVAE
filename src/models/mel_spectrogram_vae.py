@@ -28,8 +28,6 @@ class MelSpectrogramVAE(pl.LightningModule):
             self.beta_annealing = CyclicAnnealing(
                 self.hparams.min_beta,
                 self.hparams.max_beta,
-                self.hparams.beta_start_epoch,
-                self.hparams.beta_end_epoch,
                 self.hparams.beta_cycle_length
             )
         else:
@@ -284,21 +282,20 @@ class MelSpectrogramVAE(pl.LightningModule):
 
         # -------- Training -----------
         parser.add_argument("--batch_size", type=int, default=16)
-        parser.add_argument("--lr", type=float, default=5e-4)
+        parser.add_argument("--lr", type=float, default=1e-3)
 
         # -------- Beta Annealing ---------
         parser.add_argument("--beta_annealing", type=bool, default=True)
         parser.add_argument("--annealing_type", type=str, default='cyclic')
-        parser.add_argument("--min_beta", type=float, default=0.)
-        parser.add_argument("--max_beta", type=float, default=4.)
+        parser.add_argument("--min_beta", type=float, default=1e-4)
+        parser.add_argument("--max_beta", type=float, default=5e-4)
         parser.add_argument("--beta_start_epoch", type=int, default=0)
-        parser.add_argument("--beta_end_epoch", type=int, default=100)
-        parser.add_argument("--beta_cycle_length", type=int, default=11)
+        parser.add_argument("--beta_end_epoch", type=int, default=-1)
+        parser.add_argument("--beta_cycle_length", type=int, default=17)
 
         # --------- DAFX ------------
         parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
         parser.add_argument("--dafx_names", nargs="*")
-        parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
         # -------- Spectrogram ----------
         parser.add_argument("--n_mels", type=int, default=256)
@@ -323,7 +320,6 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--buffer_size_gb", type=float, default=1.0)
         parser.add_argument("--sample_rate", type=int, default=24_000)
         parser.add_argument("--dsp_sample_rate", type=int, default=24_000)
-        parser.add_argument("--shuffle", type=bool, default=True)
         parser.add_argument("--random_effect_threshold", type=float, default=0.)
         parser.add_argument("--train_length", type=int, default=130_560)
         parser.add_argument("--train_frac", type=float, default=0.9)

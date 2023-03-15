@@ -56,16 +56,6 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.latent_dim = 256
-
-    args.lr = 1e-3
-
-    args.min_beta = 1e-4
-    args.max_beta = 5e-4
-    args.beta_start_epoch = 0
-    args.beta_end_epoch = MAX_EPOCHS
-    args.beta_cycle_length = 17
-
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
@@ -90,4 +80,4 @@ if __name__ == "__main__":
     print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
 
     # # train!
-    # trainer.fit(system)
+    trainer.fit(system)
