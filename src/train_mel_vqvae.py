@@ -7,7 +7,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
 from src.callbacks.spectrogram_callback import LogSpectrogramCallback
-from src.models.vqvae.mel_spec_vqvae import MelSpecVQVAE
+from src.models.mel_spec_vqvae import MelSpecVQVAE
 
 DAFX_TO_USE = [
     'mda MultiBand',

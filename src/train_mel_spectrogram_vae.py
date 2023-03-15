@@ -30,8 +30,8 @@ if __name__ == "__main__":
     # Parse
     args = parser.parse_args()
 
-    # callbacks
-    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx', project='l5proj_melspec_vae')
+    # # callbacks
+    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx_2reslayers', project='l5proj_melspec_vae')
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(
         args,
         reload_dataloaders_every_n_epochs=1,
-        logger=wandb_logger,
+        # logger=wandb_logger,
         callbacks=[
             LogSpectrogramCallback(),
             val_checkpoint,
@@ -89,5 +89,5 @@ if __name__ == "__main__":
 
     print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
 
-    # train!
-    trainer.fit(system)
+    # # train!
+    # trainer.fit(system)

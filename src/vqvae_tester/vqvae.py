@@ -7,9 +7,9 @@ import torch.nn.functional as F
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
-from src.models.vqvae.decoder import Decoder
-from src.models.vqvae.encoder import Encoder
-from src.models.vqvae.quantizer import VectorQuantizerEMA
+from src.models.decoder import Decoder
+from src.models.encoder import Encoder
+from src.models.quantizer import VectorQuantizerEMA
 
 
 class VQVAE(pl.LightningModule):

@@ -7,9 +7,9 @@ import torch.nn.functional as F
 from pedalboard.pedalboard import load_plugin
 
 from src.dataset.audio_dataset import AudioDataset
-from src.models.vqvae.decoder import Decoder
-from src.models.vqvae.encoder import Encoder
-from src.models.vqvae.quantizer import VectorQuantizerEMA
+from src.models.decoder import Decoder
+from src.models.encoder import Encoder
+from src.models.quantizer import VectorQuantizerEMA
 from src.utils import audio_to_mel_spectrogram
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
@@ -213,9 +213,9 @@ class MelSpecVQVAE(pl.LightningModule):
         parser.add_argument("--f_min", type=int, default=20)
 
         # --------- VAE -------------
-        parser.add_argument("--num_hiddens", type=int, default=64)
-        parser.add_argument("--num_residual_hiddens", type=int, default=16)
-        parser.add_argument("--num_residual_layers", type=int, default=3)
+        parser.add_argument("--num_hiddens", type=int, default=128)
+        parser.add_argument("--num_residual_hiddens", type=int, default=32)
+        parser.add_argument("--num_residual_layers", type=int, default=2)
         parser.add_argument("--embedding_dim", type=int, default=128)
         parser.add_argument("--num_embeddings", type=int, default=4096)
         parser.add_argument("--commitment_cost", type=float, default=.25)

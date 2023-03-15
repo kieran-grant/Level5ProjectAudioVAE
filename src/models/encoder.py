@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.models.vqvae.residual import ResidualStack
+from src.models.residual import ResidualStack
 
 
 class Encoder(nn.Module):
