@@ -25,7 +25,7 @@ DAFX_TO_USE = [
 ]
 
 SEED = 1234
-MAX_EPOCHS = 30
+MAX_EPOCHS = 50
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -58,10 +58,7 @@ if __name__ == "__main__":
     args.dafx_names = DAFX_TO_USE
     args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
-    args.num_hiddens = 4
-    args.num_residual_hiddens = 2
-    args.num_residual_layers = 8
-    args.embedding_dim = 4
+    args.embedding_dim = 2
     args.num_embeddings = 4096
 
     # Set up trainer
@@ -83,7 +80,11 @@ if __name__ == "__main__":
     # create the System
     system = MelSpecVQVAE(**vars(args))
 
-    print(system)
-
+    # import torchsummary
+    #
+    # print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
+    #
+    # print(system)
+    #
     # train!
     trainer.fit(system)

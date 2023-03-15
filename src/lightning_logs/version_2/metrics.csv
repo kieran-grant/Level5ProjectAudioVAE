@@ -1,0 +1,2 @@
+train_loss/loss,train_loss/recon_loss,train_loss/vq_loss,train_loss/perplexity,epoch,step
+0.6829866766929626,0.6655182838439941,0.017468400299549103,1.9249298572540283,0,49

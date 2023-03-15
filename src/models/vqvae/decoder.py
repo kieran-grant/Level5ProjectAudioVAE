@@ -21,12 +21,12 @@ class Decoder(nn.Module):
         self._conv_trans_1 = nn.ConvTranspose2d(in_channels=num_hiddens,
                                                 out_channels=num_hiddens // 2,
                                                 kernel_size=4,
-                                                stride=2, padding=1)
+                                                stride=3, padding=1, output_padding=2)
 
         self._conv_trans_2 = nn.ConvTranspose2d(in_channels=num_hiddens // 2,
                                                 out_channels=1,
                                                 kernel_size=4,
-                                                stride=2, padding=1)
+                                                stride=3, padding=1, output_padding=2)
 
     def forward(self, inputs):
         x = self._conv_1(inputs)
