@@ -31,7 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # # callbacks
-    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx_2reslayers', project='l5proj_melspec_vae')
+    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx_3reslayers', project='l5proj_melspec_vae')
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",

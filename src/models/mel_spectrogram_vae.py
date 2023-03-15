@@ -305,12 +305,12 @@ class MelSpectrogramVAE(pl.LightningModule):
         parser.add_argument("--f_min", type=int, default=20)
 
         # --------- VAE -------------
-        parser.add_argument("--hidden_dim", nargs="*", default=(4, 28, 28))
-        parser.add_argument("--latent_dim", type=int, default=256)
-        parser.add_argument("--num_channels", type=int, default=16)
+        parser.add_argument("--hidden_dim", nargs="*", default=(8, 28, 28))
+        parser.add_argument("--latent_dim", type=int, default=128)
+        parser.add_argument("--num_channels", type=int, default=8)
         parser.add_argument("--num_residual_channels", type=int, default=8)
-        parser.add_argument("--num_residual_layers", type=int, default=2)
-        parser.add_argument("--num_pre_linear_channels", type=int, default=4)
+        parser.add_argument("--num_residual_layers", type=int, default=3)
+        parser.add_argument("--num_pre_linear_channels", type=int, default=8)
 
         # ------- Dataset  -----------
         parser.add_argument("--audio_dir", type=str, default="src/audio")
