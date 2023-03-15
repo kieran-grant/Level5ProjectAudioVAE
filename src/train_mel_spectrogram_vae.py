@@ -60,7 +60,7 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(
         args,
         reload_dataloaders_every_n_epochs=1,
-        # logger=wandb_logger,
+        logger=wandb_logger,
         callbacks=[
             LogSpectrogramCallback(),
             val_checkpoint,
