@@ -176,6 +176,20 @@ class SpectrogramVAE(pl.LightningModule):
 
         return x
 
+    def get_spectrogram(self, signal):
+        return audio_to_spectrogram(signal=signal,
+                                    n_fft=self.hparams.n_fft,
+                                    hop_length=self.hparams.hop_length,
+                                    window_size=self.hparams.window_size,
+                                    normalise_audio=self.hparams.normalise_audio)
+
+    def get_audio_embedding(self, signal):
+        X = self.get_spectrogram(signal)
+        mu, log_var = self.encode(X)
+        z = self.reparameterise(mu, log_var)
+
+        return z
+
     @staticmethod
     def reparameterise(mu, log_var):
         std = torch.exp(log_var / 2)
@@ -202,11 +216,7 @@ class SpectrogramVAE(pl.LightningModule):
         x = batch
 
         # Get spectrograms
-        X = audio_to_spectrogram(signal=x,
-                                 n_fft=self.hparams.n_fft,
-                                 hop_length=self.hparams.hop_length,
-                                 window_size=self.hparams.window_size,
-                                 normalise_audio=self.hparams.normalise_audio)
+        X = self.get_spectrogram(x)
 
         # Get reconstruction as well as mu, var
         X_hat, X_mu, X_log_var, _ = self(X)

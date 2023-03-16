@@ -15,7 +15,7 @@ from src.spsa.dafx_layer import DAFXLayer
 from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
-from src.old.models.style_transfer_vae import StyleTransferVAE
+from src.models.spectrogram_vae import SpectrogramVAE
 
 
 class EndToEndSystem(pl.LightningModule):
@@ -41,28 +41,29 @@ class EndToEndSystem(pl.LightningModule):
     def _build_audio_encoder(self):
         if self.hparams.audio_encoder_ckpt is not None:
             # load encoder weights from a pre-trained system
-            system = StyleTransferVAE.load_from_checkpoint(self.hparams.audio_encoder_ckpt)
-            self.hparams.controller_input_dim = system.hparams.latent_dim
-        else:
-            raise NotImplementedError("End-to-end system expects pre-trained audio VAE")
+            system = SpectrogramVAE.load_from_checkpoint(self.hparams.audio_encoder_ckpt)
+            self.hparams.controller_input_dim = system.hparams.latent_dim * 2
 
-        if self.hparams.audio_encoder_freeze:
             for param in system.parameters():
                 param.requires_grad = False
 
-        self.audio_encoder = system
+            self.audio_encoder = system
+        else:
+            raise NotImplementedError("End-to-end system expects pre-trained audio VAE")
 
     def _build_controller_network(self):
-        layers = [nn.Linear(self.hparams.controller_input_dim,
-                            self.hparams.controller_hidden_dims[0]),
-                  nn.LeakyReLU()]
+        layers = []
+        dims = [self.hparams.controller_input_dim] + self.hparams.controller_hidden_dims
 
-        # all other hidden layers
-        for i in range(len(self.hparams.controller_hidden_dims) - 1):
-            layers.append(nn.Linear(self.hparams.controller_hidden_dims[i], self.hparams.controller_hidden_dims[i + 1]))
+        # all hidden layers
+        for i in range(len(dims) - 1):
+            linear = nn.Linear(dims[i], dims[i + 1])
+            nn.init.xavier_uniform_(linear.weight)  # apply Xavier initialization
+            layers.append(linear)
+            layers.append(nn.LayerNorm(dims[i + 1]))
             layers.append(nn.LeakyReLU())
 
-        layers.append(nn.Linear(self.hparams.controller_hidden_dims[-1], self.dafx.get_num_params()))
+        layers.append(nn.Linear(dims[-1], self.dafx.get_num_params()))
 
         self.controller = nn.Sequential(*layers)
 
@@ -147,7 +148,7 @@ class EndToEndSystem(pl.LightningModule):
     def forward(self,
                 x: torch.Tensor,
                 y: torch.Tensor = None,
-                analysis_length: int = 0,
+                analysis_length: int = -1,
                 sample_rate: int = 24_000,
                 ):
 
@@ -168,22 +169,12 @@ class EndToEndSystem(pl.LightningModule):
             x_enc = x_enc[..., :analysis_length]
             y_enc = y_enc[..., :analysis_length]
 
-        # Get spectrograms
-        x_s = self.audio_encoder.audio_to_spectrogram(signal=x_enc,
-                                                      n_fft=self.hparams.n_fft,
-                                                      hop_length=self.hparams.hop_length,
-                                                      return_phase=self.hparams.return_phase)
-
-        y_s = self.audio_encoder.audio_to_spectrogram(signal=y_enc,
-                                                      n_fft=self.hparams.n_fft,
-                                                      hop_length=self.hparams.hop_length,
-                                                      return_phase=self.hparams.return_phase)
+        # Get embeddings
+        z_x = self.audio_encoder.get_audio_embedding(x_enc)
+        z_y = self.audio_encoder.get_audio_embedding(y_enc)
 
         # Create layered spectrogram
-        X = torch.concat([x_s, y_s], dim=1)
-
-        # Get joint embedding from layered spectrogram
-        _, _, _, z = self.audio_encoder(X)
+        z = torch.concat([z_x, z_y], dim=1)
 
         # Map embedding to parameter prediction
         p_logits = self.controller(z)
@@ -411,17 +402,10 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[1024, 512, 256])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[256, 128, 64])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
-        parser.add_argument("--audio_encoder_freeze", type=bool, default=True)
-
-        # -------- Spectrogram ----------
-        parser.add_argument("--n_fft", type=int, default=4096)
-        parser.add_argument("--hop_length", type=int, default=2048)
-        parser.add_argument("--window_size", type=int, default=4096)
-        parser.add_argument("--return_phase", type=bool, default=False)
 
         # ---  SPSA  ---
         parser.add_argument("--spsa_epsilon", type=float, default=0.01)
@@ -442,7 +426,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--random_effect_threshold", type=float, default=0.75)
         parser.add_argument("--train_length", type=int, default=131_072)
         parser.add_argument("--train_frac", type=float, default=0.9)
-        parser.add_argument("--effect_input", type=bool, default=True)
+        parser.add_argument("--effect_input", type=bool, default=False)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
         parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
