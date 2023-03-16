@@ -10,9 +10,9 @@ from src.callbacks.audio import LogAudioCallback
 from src.models.end_to_end import EndToEndSystem
 
 SEED = 1234
-MAX_EPOCHS = 20
+MAX_EPOCHS = 30
 DAFX = "mda Overdrive"
-DUMMY_SETTINGS = True
+DUMMY_SETTINGS = False
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -85,7 +85,6 @@ if __name__ == "__main__":
     # create the System
     system = EndToEndSystem(**vars(args))
 
-    # print(torchsummary.summary(system, input_size=(1, args.train_length), batch_size=16, device='cpu'))
     print(system)
 
     # train!
