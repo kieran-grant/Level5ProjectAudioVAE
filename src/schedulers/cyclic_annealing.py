@@ -6,7 +6,9 @@ class CyclicAnnealing:
             self,
             min_beta: float = 0.001,
             max_beta: float = 10.,
-            cycle_length: int = 20
+            cycle_length: int = 20,
+            max_epoch: int = 0,
+            min_epoch: int = 0,
     ):
         self.beta = min_beta
         self.min_beta = min_beta
