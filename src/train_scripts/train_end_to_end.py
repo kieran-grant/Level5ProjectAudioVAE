@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        # logger=wandb_logger,
+        logger=wandb_logger,
         callbacks=[
             LogAudioCallback(),
             train_checkpoint,
