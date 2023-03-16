@@ -429,10 +429,10 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--effect_input", type=bool, default=False)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
         parser.add_argument("--val_length", type=int, default=131_072)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=250)
-        parser.add_argument("--num_workers", type=int, default=2)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
+        parser.add_argument("--num_workers", type=int, default=4)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 
         return parser
