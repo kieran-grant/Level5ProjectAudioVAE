@@ -1,3 +1,4 @@
+import math
 from argparse import ArgumentParser
 from itertools import chain
 from typing import Tuple
@@ -63,7 +64,12 @@ class EndToEndSystem(pl.LightningModule):
             layers.append(nn.LayerNorm(dims[i + 1]))
             layers.append(nn.LeakyReLU())
 
-        layers.append(nn.Linear(dims[-1], self.dafx.get_num_params()))
+        output_linear = nn.Linear(dims[-1], self.dafx.get_num_params())
+        output_linear.weight.data.normal_(0, 0.01)  # apply random initialization
+        output_linear.bias.data.fill_(-math.log((1 - 0.5) / 0.5))  # set bias to -ln((1-0.5)/0.5)
+        layers.append(output_linear)
+
+        self.controller = nn.Sequential(*layers)
 
         self.controller = nn.Sequential(*layers)
 
@@ -390,7 +396,7 @@ class EndToEndSystem(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # --- Training  ---
         parser.add_argument("--batch_size", type=int, default=16)
-        parser.add_argument("--lr", type=float, default=3e-4)
+        parser.add_argument("--lr", type=float, default=1e-3)
         parser.add_argument("--lr_patience", type=int, default=20)
         parser.add_argument("--recon_losses", nargs="+", default=["mrstft", "l1"])
         parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0, 100.0])
