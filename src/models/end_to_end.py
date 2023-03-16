@@ -156,6 +156,15 @@ class EndToEndSystem(pl.LightningModule):
                 sample_rate: int = 24_000,
                 ):
 
+        z_x, z_y = self.get_audio_embeddings(x, y,
+                                             analysis_length=analysis_length,
+                                             sample_rate=sample_rate)
+
+        y_hat, p, z = self.predict_for_embeddings(x, z_x, z_y)
+
+        return y_hat, p, z
+
+    def get_audio_embeddings(self, x, y, analysis_length=-1, sample_rate=24_000):
         if sample_rate != self.hparams.sample_rate:
             x_enc = torchaudio.transforms.Resample(
                 sample_rate, self.hparams.sample_rate
@@ -177,7 +186,10 @@ class EndToEndSystem(pl.LightningModule):
         z_x = self.audio_encoder.get_audio_embedding(x_enc)
         z_y = self.audio_encoder.get_audio_embedding(y_enc)
 
-        # Create layered spectrogram
+        return z_x, z_y
+
+    def predict_for_embeddings(self, x, z_x, z_y):
+        # Create concatenated vector
         z = torch.concat([z_x, z_y], dim=1)
 
         # Map embedding to parameter prediction
