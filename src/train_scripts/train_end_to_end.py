@@ -11,7 +11,7 @@ from src.models.end_to_end import EndToEndSystem
 
 SEED = 1234
 MAX_EPOCHS = 20
-DAFX = "mda RingMod"
+DAFX = "mda Overdrive"
 DUMMY_SETTINGS = True
 
 if __name__ == "__main__":

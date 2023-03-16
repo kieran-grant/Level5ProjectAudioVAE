@@ -15,7 +15,7 @@ from src.callbacks.metrics import (
 
 
 class LogAudioCallback(pl.callbacks.Callback):
-    def __init__(self, num_examples=4, peak_normalize=True, sample_rate=22050):
+    def __init__(self, num_examples=4, peak_normalize=True, sample_rate=24_000):
         super().__init__()
         self.num_examples = 4
         self.peak_normalize = peak_normalize
@@ -117,11 +117,12 @@ class LogAudioCallback(pl.callbacks.Callback):
         y = outputs["y"][batch_idx, ...].float()
         y_hat = outputs["y_hat"][batch_idx, ...].float()
         y_ref = outputs["y_ref"][batch_idx, ...].float()
+        param_lookup = outputs["param_names"]
 
         for idx in range(len(p)):
             logger.experiment.log(
                 {
-                    f"dafx_parameters/param_{idx+1}":
+                    f"dafx_parameters/{param_lookup[idx]}":
                         p[idx].squeeze()
                 }
             )

@@ -253,6 +253,7 @@ class EndToEndSystem(pl.LightningModule):
             "p": p.cpu(),
             "z": z.cpu(),
             "y_hat": y_hat.cpu(),
+            "param_names": self.dafx.param_names
         }
 
         return loss, data_dict
@@ -437,7 +438,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--sample_rate", type=int, default=24_000)
         parser.add_argument("--dsp_sample_rate", type=int, default=24_000)
         parser.add_argument("--shuffle", type=bool, default=True)
-        parser.add_argument("--random_effect_threshold", type=float, default=0.75)
+        parser.add_argument("--random_effect_threshold", type=float, default=0.5)
         parser.add_argument("--train_length", type=int, default=131_072)
         parser.add_argument("--train_frac", type=float, default=0.9)
         parser.add_argument("--effect_input", type=bool, default=False)
