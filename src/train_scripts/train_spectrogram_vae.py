@@ -2,18 +2,30 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import torch
-import torchsummary
 import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
 from src.callbacks.spectrogram_callback import LogSpectrogramCallback
-from src.models.mel_spectrogram_vae import MelSpectrogramVAE
+from src.models.spectrogram_vae import SpectrogramVAE
 
-DAFX_TO_USE = ['mda Delay', 'mda Overdrive', 'mda RingMod', 'mda MultiBand']
+DAFX_TO_USE = [
+    # 'mda MultiBand',
+    # 'clean',
+    'mda Delay',
+    'mda Overdrive',
+    'mda Ambience',
+    'mda RingMod',
+    # 'mda Leslie',
+    'mda Combo',
+    # 'mda Thru-Zero Flanger',
+    # 'mda Loudness',
+    # 'mda Limiter',
+    'mda Dynamics',
+]
 
 SEED = 123
-MAX_EPOCHS = 300
+MAX_EPOCHS = 800
 
 if __name__ == "__main__":
     wandb.require("service")
@@ -25,13 +37,19 @@ if __name__ == "__main__":
 
     # Add available trainer args and system args
     parser = pl.Trainer.add_argparse_args(parser)
-    parser = MelSpectrogramVAE.add_model_specific_args(parser)
+    parser = SpectrogramVAE.add_model_specific_args(parser)
 
     # Parse
     args = parser.parse_args()
 
-    # # callbacks
-    wandb_logger = WandbLogger(name=f'vtck_{len(DAFX_TO_USE)}fx_3reslayers', project='l5proj_melspec_vae')
+    # callbacks
+    wandb_logger = WandbLogger(name='vtck_5fx_plsnl_short_wind', project='l5proj_spectrogram_vae')
+    # wandb_logger = None
+
+    # early_stopping = EarlyStopping(
+    #     monitor="val_loss/loss",
+    #     mode="min",
+    #     patience=100)
 
     val_checkpoint = ModelCheckpoint(
         monitor="val_loss/loss",
@@ -52,9 +70,26 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
+    args.dafx_file = "/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
-    args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
+    args.audio_dir = "/src/audio"
+
+    args.latent_dim = 128
+
+    args.lr = 5e-4
+
+    args.min_beta = 1e-4
+    args.max_beta = 5e-3
+    args.beta_start_epoch = 0
+    args.beta_end_epoch = MAX_EPOCHS
+    args.beta_cycle_length = 17
+
+    args.hop_length = 1024
+    args.window_size = 2048
+    args.hidden_dim = (32, 9, 129)
+    #
+    # args.train_examples_per_epoch = 100
+    # args.val_examples_per_epoch = 10
 
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -75,9 +110,9 @@ if __name__ == "__main__":
     )
 
     # create the System
-    system = MelSpectrogramVAE(**vars(args))
+    system = SpectrogramVAE(**vars(args))
 
-    print(torchsummary.summary(system, input_size=(1, 256, 256), device='cpu'))
+    print(system)
 
-    # # train!
+    # train!
     trainer.fit(system)

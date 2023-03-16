@@ -37,9 +37,9 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
+    args.dafx_file = "/src/dafx/mda.vst3"
     args.dafx_name = "mda Delay"
-    args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
+    args.audio_dir = "/src/audio"
 
     args.audio_encoder_ckpt = \
         "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/3kdv9ddi/checkpoints/epoch=820-step=513125.ckpt"

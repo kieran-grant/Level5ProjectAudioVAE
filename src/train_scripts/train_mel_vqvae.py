@@ -54,9 +54,9 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
+    args.dafx_file = "/src/dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
-    args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
+    args.audio_dir = "/src/audio"
 
     args.embedding_dim = 2
     args.num_embeddings = 4096

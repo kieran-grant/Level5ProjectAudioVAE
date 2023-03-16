@@ -48,8 +48,8 @@ def get_audio_dataset(dafx,
 
 
 def get_colour(x, y):
-    assert(0 <= x <= 1)
-    assert(0 <= y <= 1)
+    assert (0 <= x <= 1)
+    assert (0 <= y <= 1)
 
     # calculate the red, green, and blue values based on x and y coordinates
     red = int(x * 255)
@@ -57,7 +57,7 @@ def get_colour(x, y):
     blue = int(0.5 * 255)
 
     def clamp(color):
-      return max(0, min(color, 255))
+        return max(0, min(color, 255))
 
     hex = "#{0:02x}{1:02x}{2:02x}".format(clamp(red), clamp(green), clamp(blue))
 
@@ -80,4 +80,14 @@ def get_subplot_dimensions(N, max_columns=None):
 
 
 def calculate_upper_triangular_entries(n):
-    return int((n*(n-1)) / 2)
+    return int((n * (n - 1)) / 2)
+
+
+def trim_axs(axs, N):
+    """
+    Reduce *axs* to *N* Axes. All further Axes are removed from the figure.
+    """
+    axs = axs.flat
+    for ax in axs[N:]:
+        ax.remove()
+    return axs[:N]

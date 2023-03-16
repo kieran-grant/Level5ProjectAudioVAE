@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import wandb
 
 from src.callbacks.plotting import plot_multi_spectrum
-from src.metrics import (
+from src.callbacks.metrics import (
     LoudnessError,
     SpectralCentroidError,
     CrestFactorError,
