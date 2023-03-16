@@ -58,7 +58,7 @@ class EndToEndSystem(pl.LightningModule):
         # all hidden layers
         for i in range(len(dims) - 1):
             linear = nn.Linear(dims[i], dims[i + 1])
-            nn.init.xavier_uniform_(linear.weight)  # apply Xavier initialization
+            nn.init.xavier_normal_(linear.weight)  # apply Xavier initialization
             layers.append(linear)
             layers.append(nn.LayerNorm(dims[i + 1]))
             layers.append(nn.LeakyReLU())
@@ -401,8 +401,8 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
         # --- Controller  ---
-        parser.add_argument("--controller_input_dim", type=int, default=2048)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[256, 128, 64])
+        parser.add_argument("--controller_input_dim", type=int, default=256)
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[128, 64, 32])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
@@ -429,9 +429,9 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--effect_input", type=bool, default=False)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
         parser.add_argument("--val_length", type=int, default=131_072)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=250)
         parser.add_argument("--num_workers", type=int, default=2)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 

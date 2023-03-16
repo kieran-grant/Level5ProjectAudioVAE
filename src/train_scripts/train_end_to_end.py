@@ -2,21 +2,26 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import torch
+import wandb
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-from src.callbacks.audio import LogAudioCallback
-
 from pytorch_lightning.loggers import WandbLogger
 
+from src.callbacks.audio import LogAudioCallback
 from src.models.end_to_end import EndToEndSystem
 
 SEED = 1234
+MAX_EPOCHS = 30
+DAFX = "mda RingMod"
+DUMMY_SETTINGS = True
 
 if __name__ == "__main__":
+    wandb.require("service")
     pl.seed_everything(SEED)
     torch.set_float32_matmul_precision('medium')
 
     # callbacks
-    wandb_logger = WandbLogger(name='vtck_delay_random_params_out_only', project='l5proj_end2end')
+    log_name = f'vtck_{DAFX.split()[-1].lower()}_dummy' if DUMMY_SETTINGS else f'vtck_{DAFX.split()[-1].lower()}'
+    wandb_logger = WandbLogger(name=log_name, project='l5proj_end2end')
     # wandb_logger = None
 
     early_stopping = EarlyStopping(
@@ -37,20 +42,15 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.dafx_file = "/src/dafx/mda.vst3"
-    args.dafx_name = "mda Delay"
-    args.audio_dir = "/src/audio"
+    args.dafx_file = "/home/kieran/Level5ProjectAudioVAE/src/dafx/mda.vst3"
+    args.dafx_name = DAFX
+    args.audio_dir = "/home/kieran/Level5ProjectAudioVAE/src/audio"
 
     args.audio_encoder_ckpt = \
-        "/home/kieran/Level5ProjectAudioVAE/src/l5proj_style_vae/3kdv9ddi/checkpoints/epoch=820-step=513125.ckpt"
+        "/home/kieran/Level5ProjectAudioVAE/src/l5proj_spectrogram_vae/hdx3y4ly/checkpoints/epoch=169-step=35530.ckpt"
 
-    args.effect_input = False
-    args.effect_output = True
-    args.dummy_setting = True
-
-    args.train_examples_per_epoch = 5_000
-    args.val_examples_per_epoch = 500
-    args.max_epochs = 30
+    args.dummy_setting = DUMMY_SETTINGS
+    args.max_epochs = MAX_EPOCHS
 
     # Checkpoint on the first reconstruction loss
     args.train_monitor = f"train_loss/{args.recon_losses[-1]}"
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Set up trainer
     trainer = pl.Trainer.from_argparse_args(
         args,
-        logger=wandb_logger,
+        # logger=wandb_logger,
         callbacks=[
             LogAudioCallback(),
             train_checkpoint,
@@ -84,6 +84,7 @@ if __name__ == "__main__":
     # create the System
     system = EndToEndSystem(**vars(args))
 
+    # print(torchsummary.summary(system, input_size=(1, args.train_length), batch_size=16, device='cpu'))
     print(system)
 
     # train!
