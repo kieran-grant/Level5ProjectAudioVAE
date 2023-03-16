@@ -71,8 +71,6 @@ class EndToEndSystem(pl.LightningModule):
 
         self.controller = nn.Sequential(*layers)
 
-        self.controller = nn.Sequential(*layers)
-
         self.dafx_layer = DAFXLayer(self.dafx, self.hparams.spsa_epsilon)
 
     def _configure_losses(self):
@@ -192,7 +190,14 @@ class EndToEndSystem(pl.LightningModule):
         p = torch.clamp(p, min=0.01, max=0.99)
 
         # Process audio conditioned on parameters
-        y_hat = self.dafx_layer([x, p]).unsqueeze(1)
+        y_hat = self.dafx_layer([x, p])
+
+        # peak normalise
+        y_hat = torch.div(y_hat.T, torch.max(y_hat.abs(), dim=1).values).T
+        y_hat = y_hat * 10 ** (-12.0 / 20)  # with min 3 dBFS headroom
+
+        # Make correct shape
+        y_hat = y_hat.unsqueeze(1)
 
         return y_hat, p, z
 
@@ -395,7 +400,7 @@ class EndToEndSystem(pl.LightningModule):
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # --- Training  ---
-        parser.add_argument("--batch_size", type=int, default=16)
+        parser.add_argument("--batch_size", type=int, default=12)
         parser.add_argument("--lr", type=float, default=1e-3)
         parser.add_argument("--lr_patience", type=int, default=20)
         parser.add_argument("--recon_losses", nargs="+", default=["mrstft", "l1"])
@@ -435,10 +440,10 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--effect_input", type=bool, default=False)
         parser.add_argument("--effect_output", type=bool, default=True)
         parser.add_argument("--half", type=bool, default=False)
-        parser.add_argument("--train_examples_per_epoch", type=int, default=5_000)
+        parser.add_argument("--train_examples_per_epoch", type=int, default=2_500)
         parser.add_argument("--val_length", type=int, default=131_072)
-        parser.add_argument("--val_examples_per_epoch", type=int, default=500)
-        parser.add_argument("--num_workers", type=int, default=4)
+        parser.add_argument("--val_examples_per_epoch", type=int, default=250)
+        parser.add_argument("--num_workers", type=int, default=2)
         parser.add_argument("--dummy_setting", type=bool, default=False)
 
         return parser

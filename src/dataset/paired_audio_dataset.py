@@ -45,7 +45,7 @@ class PairedAudioDataset(torch.utils.data.Dataset):
             audio_dir: str,
             input_dirs: List = None,
             subset: str = "train",
-            length: int = 24_000*5,
+            length: int = 24_000 * 5,
             train_frac: float = 0.8,
             val_per: float = 0.1,
             buffer_size_gb: float = 1.0,

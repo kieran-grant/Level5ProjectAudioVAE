@@ -10,7 +10,7 @@ from src.callbacks.audio import LogAudioCallback
 from src.models.end_to_end import EndToEndSystem
 
 SEED = 1234
-MAX_EPOCHS = 30
+MAX_EPOCHS = 20
 DAFX = "mda RingMod"
 DUMMY_SETTINGS = True
 
