@@ -189,12 +189,15 @@ class EndToEndSystem(pl.LightningModule):
         # Clamp -> [0.01, 0.99]
         p = torch.clamp(p, min=0.01, max=0.99)
 
+        # Always predict dummy settings
+        # p = torch.ones(x.size()[0], self.dafx.get_num_params(), requires_grad=True) * 0.5
+
         # Process audio conditioned on parameters
         y_hat = self.dafx_layer([x, p])
 
         # peak normalise
-        y_hat = torch.div(y_hat.T, torch.max(y_hat.abs(), dim=1).values).T
-        y_hat = y_hat * 10 ** (-12.0 / 20)  # with min 3 dBFS headroom
+        # y_hat = torch.div(y_hat.T, torch.max(y_hat.abs(), dim=1).values).T
+        # y_hat = y_hat * 10 ** (-12.0 / 20)  # with min 3 dBFS headroom
 
         # Make correct shape
         y_hat = y_hat.unsqueeze(1)
@@ -413,7 +416,7 @@ class EndToEndSystem(pl.LightningModule):
 
         # --- Controller  ---
         parser.add_argument("--controller_input_dim", type=int, default=256)
-        parser.add_argument("--controller_hidden_dims", nargs="+", default=[128, 64, 32])
+        parser.add_argument("--controller_hidden_dims", nargs="+", default=[128, 128, 64, 32])
 
         # --- Encoder ---
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
