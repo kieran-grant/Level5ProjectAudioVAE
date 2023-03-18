@@ -1,6 +1,7 @@
 import glob
 import os
 
+import numpy as np
 import torch
 from scipy.io import wavfile
 
@@ -36,3 +37,17 @@ def param_vector_to_named_dictionary(dafx, vec, prefix=""):
         out[f"{prefix}{param_name}"] = vec[i]
 
     return out
+
+def get_top_n_indices(df, column_name, n):
+    return np.argsort(-df[column_name].values)[:n]
+
+def get_bottom_n_indices(df, column_name, n):
+    return np.argsort(df[column_name].values)[:n]
+
+def common_elements(*arrays):
+    sets = [set(array) for array in arrays]
+    common = set()
+    for i in range(len(arrays)):
+        for j in range(i+1, len(arrays)):
+            common |= sets[i] & sets[j]
+    return list(common)

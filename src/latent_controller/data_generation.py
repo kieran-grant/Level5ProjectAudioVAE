@@ -19,11 +19,10 @@ parser.add_argument("--checkpoint_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
 parser.add_argument("--data_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data")
-parser.add_argument("--checkpoint_id", type=str, default="fboro0y2")
+parser.add_argument("--checkpoint_id", type=str, default="8283y9mm")
 parser.add_argument("--num_examples", type=int, default=1_000)
-parser.add_argument("--dafx_name", type=str, default="mda Overdrive")
 parser.add_argument("--seed", type=int, default=123)
-parser.add_argument("--intial_audio_retry", type=int, default=3)
+parser.add_argument("--intial_audio_retry", type=int, default=10)
 
 # Parse
 args = parser.parse_args()
@@ -70,7 +69,7 @@ def main(args):
     x = x.reshape(1, 1, -1).to(device)
     c_utils.save_audio(args.dir, x.cpu().detach().numpy(), "clean")
 
-    dafx = p_utils.dafx_from_name(args.dafx_name, sample_rate=model.hparams.sample_rate)
+    dafx = model.dafx
 
     for i in tqdm(range(args.num_examples)):
         p = dafx.get_random_parameter_settings()
