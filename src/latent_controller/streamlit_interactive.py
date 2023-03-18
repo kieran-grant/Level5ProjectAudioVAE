@@ -37,10 +37,16 @@ def get_df(df_file):
 
 @st.cache_resource
 def get_fig(df, n_supervised):
-    return px.scatter(df,
-                      x=f"x_emb_n={n_supervised}",
-                      y=f"y_emb_n={n_supervised}",
-                      title='Plots')
+    fig = px.scatter(df,
+                     x=f"x_emb_n={n_supervised}",
+                     y=f"y_emb_n={n_supervised}")
+
+    # Option-1:  using fig.update_yaxes()
+    fig.update_yaxes(visible=False, showticklabels=False)
+    fig.update_xaxes(visible=False, showticklabels=False)
+
+    return fig
+
 
 def get_audio_for_index(idx, df):
     return df.iloc[idx]['audio_file']
