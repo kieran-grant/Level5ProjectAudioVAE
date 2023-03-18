@@ -15,8 +15,13 @@ class SPSABatch(torch.autograd.Function):
         x, y = x.cpu(), y.cpu()
 
         z = []
-        for i in range(x.size()[0]):
-            z.append(dafx.apply(x[i], y[i]))
+
+        # check if batch size == 1
+        if len(x.shape) == 1:
+            z.append(dafx.apply(x, y))
+        else:
+            for i in range(x.size()[0]):
+                z.append(dafx.apply(x[i], y[i]))
 
         return torch.stack(z).to(device)
 
