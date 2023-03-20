@@ -19,7 +19,7 @@ parser.add_argument("--checkpoint_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
 parser.add_argument("--data_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data")
-parser.add_argument("--checkpoint_id", type=str, default="8283y9mm")
+parser.add_argument("--checkpoint_id", type=str, default="c5rp55l2")
 parser.add_argument("--num_examples", type=int, default=1_000)
 parser.add_argument("--seed", type=int, default=123)
 parser.add_argument("--intial_audio_retry", type=int, default=10)

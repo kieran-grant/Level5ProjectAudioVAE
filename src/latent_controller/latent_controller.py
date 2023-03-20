@@ -67,14 +67,13 @@ def create_colour_options(df: pd.DataFrame):
     return colour_options
 
 
-### ===== GLOBAL VARS =======
-
+# ===== GLOBAL VARS =======
 N_SUPERVISED_CHOICES = (0, 5, 10, 25, 100)
 DATA_DIRECTORY = "/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data"
 EFFECT_TO_CHKPT_MAP = {
-    "Overdrive": "fboro0y2"
+    "Overdrive": "fboro0y2",
+    "RingMod": "c5rp55l2"
 }
-DEFAULT_EFFECT = "Overdrive"
 
 pio.templates.default = "plotly"
 
@@ -83,8 +82,7 @@ st.title("Latent Controller")
 
 # Dropdown box for effect
 dafx = st.selectbox("Effect", EFFECT_TO_CHKPT_MAP.keys(), 0)
-CURRENT_EFFECT = dafx
-CHECKPOINT_ID = EFFECT_TO_CHKPT_MAP.get(CURRENT_EFFECT)
+CHECKPOINT_ID = EFFECT_TO_CHKPT_MAP.get(dafx)
 
 DIR = f"{DATA_DIRECTORY}/{CHECKPOINT_ID}/"
 
