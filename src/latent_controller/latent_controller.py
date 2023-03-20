@@ -27,7 +27,8 @@ def get_fig(df: pd.DataFrame, n_supervised: int, colour: Optional[str]):
                      x=f"x_emb_n={n_supervised}",
                      y=f"y_emb_n={n_supervised}",
                      color=colour,
-                     size_max=50
+                     size_max=50,
+                     hover_name='id'
                      )
 
     # use custom colour
@@ -112,7 +113,7 @@ try:
     st.audio(get_audio_for_file(f"{DIR}/audio/audio_clean.wav"))
 
     # Show effected audio
-    st.markdown("Effected audio")
+    st.markdown(f"Effected audio (ID={index})")
     f_name = get_audio_file_for_index(index, df)
     st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
 
