@@ -91,7 +91,7 @@ if __name__ == "__main__":
             emb = reducer.fit_transform(y_emb, y=masked_target)
 
         color_emb = (emb - emb.min(0)) / emb.ptp(0)
-        colours = np.array([get_colour(e[0], e[1]) for e in color_emb], dtype=np.str)
+        colours = np.array([get_colour(e[0], e[1]) for e in color_emb], dtype=str)
         colours = np.expand_dims(colours, axis=1)
 
         complete_emb = np.hstack([emb, colours])
