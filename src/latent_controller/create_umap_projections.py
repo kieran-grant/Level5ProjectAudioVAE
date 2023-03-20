@@ -59,7 +59,7 @@ parser = ArgumentParser()
 
 parser.add_argument("--data_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data")
-parser.add_argument("--checkpoint_id", type=str, default="c5rp55l2")
+parser.add_argument("--checkpoint_id", type=str, default="8283y9mm")
 parser.add_argument("--n_supervised", nargs="+", default=[0, 5, 10, 25, 100])
 parser.add_argument("--n_neighbors", type=int, default=15)
 parser.add_argument("--min_dist", type=float, default=.1)

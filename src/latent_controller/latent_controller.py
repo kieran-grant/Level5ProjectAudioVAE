@@ -72,7 +72,10 @@ N_SUPERVISED_CHOICES = (0, 5, 10, 25, 100)
 DATA_DIRECTORY = "/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data"
 EFFECT_TO_CHKPT_MAP = {
     "Overdrive": "fboro0y2",
-    "RingMod": "c5rp55l2"
+    "RingMod": "c5rp55l2",
+    "Delay": "gg4q2yj9",
+    "Combo": "8283y9mm",
+    "MultiBand": "th24l5fs",
 }
 
 pio.templates.default = "plotly"
