@@ -5,6 +5,7 @@ import umap
 from tqdm import tqdm
 
 from src.latent_controller.controller_utils import *
+from src.plot_utils import get_colour
 
 
 def get_supervised_feature_ids(df, n, tolerance=1_000):
@@ -89,10 +90,17 @@ if __name__ == "__main__":
 
             emb = reducer.fit_transform(y_emb, y=masked_target)
 
-        embeddings[f'n={N}'] = emb
+        color_emb = (emb - emb.min(0)) / emb.ptp(0)
+        colours = np.array([get_colour(e[0], e[1]) for e in color_emb], dtype=np.str)
+        colours = np.expand_dims(colours, axis=1)
+
+        complete_emb = np.hstack([emb, colours])
+
+        embeddings[f'n={N}'] = complete_emb
 
     for k, v in embeddings.items():
         metadata[f'x_emb_{k}'] = v[:, 0]
         metadata[f'y_emb_{k}'] = v[:, 1]
+        metadata[f'colour_{k}'] = v[:, 2]
 
     metadata.to_csv(os.path.join(args.dir, "full_data.csv"))
