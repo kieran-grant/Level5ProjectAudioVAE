@@ -36,14 +36,35 @@ def get_df(df_file):
 
 
 @st.cache_resource
-def get_fig(df, n_supervised):
-    fig = px.scatter(df,
-                     x=f"x_emb_n={n_supervised}",
-                     y=f"y_emb_n={n_supervised}")
+def get_fig(df, n_supervised, colour):
+    if colour is None:
+        fig = px.scatter(df,
+                         x=f"x_emb_n={n_supervised}",
+                         y=f"y_emb_n={n_supervised}",
+                         color=None,
+                         size_max=50
+                         )
 
+        # fig.update_traces(marker=dict(color=df[f'colour_n={n_supervised}']))
+        fig.update_traces(opacity=.7)
+    else:
+        fig = px.scatter(df,
+                         x=f"x_emb_n={n_supervised}",
+                         y=f"y_emb_n={n_supervised}",
+                         color=colour,
+                         size_max=20
+                         )
+
+    # use custom colours
+    # fig.update_traces(marker=dict(color=df[f'colour_n={n_supervised}']))
     # Option-1:  using fig.update_yaxes()
     fig.update_yaxes(visible=False, showticklabels=False)
     fig.update_xaxes(visible=False, showticklabels=False)
+
+    fig.update_layout(plot_bgcolor="#ffffff",
+                      margin=dict(l=10, r=10, t=20, b=20))
+
+
 
     return fig
 
@@ -60,8 +81,21 @@ n_supervised = st.selectbox("Number of supervised points",
                             n_supervised_choices,
                             n_supervised_choices.index(args.n_supervised))
 
+
+
 df = get_df(f"{DIR}/full_data.csv")
-fig = get_fig(df, n_supervised)
+
+colour_options = [None]
+# Add params to colour options
+colour_options.extend([col for col in df.columns.tolist() if "p_" in col])
+# Add params for brightness/depth
+colour_options.extend([col for col in df.columns.tolist() if "_diff" in col])
+
+colour = st.selectbox("Parameter coloring",
+                     colour_options,
+                     0)
+
+fig = get_fig(df, n_supervised, colour)
 selected_points = plotly_events(fig)
 
 try:
