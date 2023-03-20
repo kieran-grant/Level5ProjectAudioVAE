@@ -31,8 +31,7 @@ def get_nearest_point(x, y, df, n_sup):
 
 @st.cache_data
 def get_df(df_file):
-    df = pd.read_csv(df_file)
-    return df
+    return pd.read_csv(df_file)
 
 
 @st.cache_resource
@@ -44,12 +43,10 @@ def get_fig(df, n_supervised, colour):
                      size_max=50
                      )
 
+    # use custom colour
     # fig.update_traces(marker=dict(color=df[f'colour_n={n_supervised}']))
-    fig.update_traces(opacity=.7)
+    fig.update_traces(opacity=.9)
 
-    # use custom colours
-    # fig.update_traces(marker=dict(color=df[f'colour_n={n_supervised}']))
-    # Option-1:  using fig.update_yaxes()
     fig.update_yaxes(visible=False, showticklabels=False)
     fig.update_xaxes(visible=False, showticklabels=False)
 
@@ -92,11 +89,17 @@ try:
     index = get_nearest_point(a['x'], a['y'], df, n_supervised)
     filename = get_audio_for_index(index, df)
 
-    audio_file = open(f"{DIR}/audio/{filename}", 'rb')
-    audio_bytes = audio_file.read()
+    # Show clean audio
+    st.markdown("Clean audio")
+    clean_audio = open(f"{DIR}/audio/audio_clean.wav", 'rb')
+    clean_audio_bytes = clean_audio.read()
+    st.audio(clean_audio_bytes, format='audio/wav')
 
-    st.audio(audio_bytes, format='audio/wav')
-    st.write(a)
+    # Show effected audio
+    st.markdown("Effected audio")
+    effected_audio_file = open(f"{DIR}/audio/{filename}", 'rb')
+    effected_audio_bytes = effected_audio_file.read()
+    st.audio(effected_audio_bytes, format='audio/wav')
 except IndexError:
     # selected points will be empty when page first loads
     pass
