@@ -33,8 +33,8 @@ def get_dataset(dafx_name, audio_length, args):
     dataset = PairedAudioDataset(
         dafx=dafx,
         audio_dir=args.audio_dir,
-        subset="val",
-        train_frac=0.8,
+        subset="train",
+        train_frac=0.95,
         input_dirs=args.dataset_input_dirs,
         num_examples_per_epoch=args.num_examples,
         augmentations={},
@@ -143,15 +143,15 @@ parser = ArgumentParser()
 
 parser.add_argument("--dafx_names", nargs="+",
                     default=[
-                        "mda Overdrive",
-                        "mda Delay",
-                        "mda Ambience",
-                        "mda RingMod",
-                        "mda Combo",
+                        # "mda Overdrive",
+                        # "mda Delay",
+                        # "mda Ambience",
+                        # "mda RingMod",
+                        # "mda Combo",
                         # "mda Dynamics",
-                        "mda MultiBand",
-                        # "mda Flanger",
-                        # "mda Leslie"
+                        # "mda MultiBand",
+                        "mda Thru-Zero Flanger",
+                        "mda Leslie"
                     ])
 parser.add_argument("--dataset", type=str, default="daps")
 parser.add_argument("--checkpoints_dir", type=str,
@@ -160,7 +160,7 @@ parser.add_argument("--audio_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/audio")
 parser.add_argument("--results_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/evaluation/data/metrics")
-parser.add_argument("--num_examples", type=int, default=100)
+parser.add_argument("--num_examples", type=int, default=5_000)
 parser.add_argument("--sample_rate", type=int, default=24_000)
 parser.add_argument("--seed", type=int, default=123)
 

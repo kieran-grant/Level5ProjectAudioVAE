@@ -177,11 +177,11 @@ N_SUPERVISED_CHOICES = (0, 5, 10, 25, 100)
 DATA_DIRECTORY = "/home/kieran/Level5ProjectAudioVAE/src/latent_controller/data"
 EFFECT_TO_CHKPT_MAP = {
     "Overdrive": "fboro0y2",
-    "RingMod": "c5rp55l2",
-    "Delay": "gg4q2yj9",
-    "Combo": "8283y9mm",
+    # "RingMod": "c5rp55l2",
+    # "Delay": "gg4q2yj9",
+    # "Combo": "8283y9mm",
     "MultiBand": "th24l5fs",
-    "Ambience": "6d7hvfwc",
+    # "Ambience": "6d7hvfwc",
 }
 
 pio.templates.default = "plotly"
@@ -196,7 +196,9 @@ CHECKPOINT_ID = EFFECT_TO_CHKPT_MAP.get(dafx)
 DIR = f"{DATA_DIRECTORY}/{CHECKPOINT_ID}/"
 
 # Dropdown box for num supervised points
-n_supervised = st.selectbox("Number of supervised points", N_SUPERVISED_CHOICES, 0)
+n_supervised = 0
+
+# n_supervised = st.selectbox("Number of supervised points", N_SUPERVISED_CHOICES, 0)
 
 df = get_df(f"{DIR}/full_data.csv")
 
@@ -213,7 +215,12 @@ if test_num == 1:
 else:
     example_num = None
 
-fig, idx_min, idx_max, idx_mid = get_fig(df, n_supervised, colour, dafx, test_num, example_num)
+fig, idx_min, idx_max, idx_mid = get_fig(df,
+                                         n_supervised,
+                                         colour,
+                                         dafx,
+                                         test_num,
+                                         example_num)
 
 selected_points = plotly_events(fig)
 
