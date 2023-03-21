@@ -230,6 +230,7 @@ def effect_to_end_to_end_checkpoint_id(effect_name):
         "combo": "8283y9mm",
         "multiband": "th24l5fs",
         "ambience": "6d7hvfwc",
+        "dynamics": "ql2ll6wp",
     }
 
     if len(effect_name.split()) >= 2:

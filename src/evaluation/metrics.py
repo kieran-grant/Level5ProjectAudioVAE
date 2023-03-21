@@ -57,8 +57,8 @@ def get_dataset(dafx_name, audio_length, args):
     )
 
 
-def get_results_filename(results_dir, dafx, dataset):
-    return results_dir + f"/{dafx.split()[-1].lower()}_{dataset}.csv"
+def get_results_filename(dafx, args):
+    return args.results_dir + f"/{dafx.split()[-1].lower()}_{args.dataset}_{args.num_examples}.csv"
 
 
 def main(args):
@@ -83,21 +83,22 @@ def main(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     for dafx_name in args.dafx_names:
-        print(f"\nGetting {args.dataset} metrics for: {dafx_name}")
+        print(f"Getting {args.dataset} metrics for: {dafx_name}")
         checkpoint = get_checkpoint_for_effect(dafx_name,
                                                args.checkpoints_dir)
 
         # load model
+        print(f"Loading model from checkpoint: ", checkpoint)
         model = EndToEndSystem.load_from_checkpoint(checkpoint).to(device)
         model.eval()
 
+        # get dataset
         loader = get_dataset(dafx_name,
                              audio_length=model.hparams.train_length * 2,
                              args=args)
 
+        print(f"Predicting audio from reference...")
         outputs = []
-
-        print(f"\nPredicting audio from reference...")
         for batch in tqdm(loader):
             x, y = batch
             x, y_ref, y = get_training_reference(x, y)
@@ -105,8 +106,8 @@ def main(args):
             y_hat, p, z = model(x.to(device), y=y_ref.to(device))
 
             outputs.append({
-                "y": y,
-                "y_hat": y_hat
+                "y": y.detach().cpu(),
+                "y_hat": y_hat.detach().cpu(),
             })
 
         results = {
@@ -119,7 +120,7 @@ def main(args):
             "RMS": [],
         }
 
-        print(f"Calculating metrics for {dafx_name}...")
+        print(f"\nCalculating metrics for {dafx_name}...")
         for output in tqdm(outputs):
             for metric_name, metric in metrics.items():
                 try:
@@ -131,27 +132,26 @@ def main(args):
                     print("Some error occurred: ", e)
                     results[metric_name].append(np.NaN)
 
-        results_filename = get_results_filename(args.results_dir, dafx_name, args.dataset)
+        results_filename = get_results_filename(dafx_name, args)
         df = pd.DataFrame(results)
         df.to_csv(results_filename)
 
-        print(f"\n{dafx_name} metrics saved to: {results_filename}")
+        print(f"{dafx_name} metrics saved to: {results_filename}")
 
 
 parser = ArgumentParser()
 
-parser.add_argument("--dafx_names",
-                    nargs="+",
+parser.add_argument("--dafx_names", nargs="+",
                     default=[
-                        "Overdrive",
-                        "Delay",
-                        "Ambience",
-                        "RingMod",
-                        "Combo",
-                        # "Dynamics",
-                        "MultiBand",
-                        # "Flanger",
-                        # "Leslie"
+                        "mda Overdrive",
+                        "mda Delay",
+                        "mda Ambience",
+                        "mda RingMod",
+                        "mda Combo",
+                        # "mda Dynamics",
+                        "mda MultiBand",
+                        # "mda Flanger",
+                        # "mda Leslie"
                     ])
 parser.add_argument("--dataset", type=str, default="daps")
 parser.add_argument("--checkpoints_dir", type=str,
@@ -160,7 +160,7 @@ parser.add_argument("--audio_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/audio")
 parser.add_argument("--results_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/evaluation/data/metrics")
-parser.add_argument("--num_examples", type=int, default=1_000)
+parser.add_argument("--num_examples", type=int, default=100)
 parser.add_argument("--sample_rate", type=int, default=24_000)
 parser.add_argument("--seed", type=int, default=123)
 
