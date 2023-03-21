@@ -77,6 +77,7 @@ EFFECT_TO_CHKPT_MAP = {
     "Delay": "gg4q2yj9",
     "Combo": "8283y9mm",
     "MultiBand": "th24l5fs",
+    "Ambience": "6d7hvfwc",
 }
 
 pio.templates.default = "plotly"

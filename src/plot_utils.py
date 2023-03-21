@@ -4,6 +4,7 @@ import torch
 from pedalboard.pedalboard import load_plugin
 
 from src.dataset.audio_dataset import AudioDataset
+from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.wrappers.dafx_wrapper import DAFXWrapper
 from src.wrappers.null_dafx_wrapper import NullDAFXWrapper
 
