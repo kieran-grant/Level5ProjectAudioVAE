@@ -15,14 +15,10 @@ TEST_1_MARKER_LOOKUP = {
         3: "p_drive"
     },
     "multiband": {
-        1: "x_emb_n=0",
-        2: "y_emb_n=0",
-        3: "brightness_diff",
+        1: "brightness_diff",
+        2: "x_emb_n=0",
+        3: "y_emb_n=0",
     },
-}
-
-TEST_2_MARKER_LOOKUP = {
-
 }
 
 
@@ -105,6 +101,16 @@ def get_markers_for_test(df, dafx_name, test_num, example_num, n_supervised):
         markers.append(b_marker)
         markers.append(c_marker)
 
+    elif test_num == 2 and dafx_name.lower() in TEST_1_MARKER_LOOKUP:
+        x_mean = df[f"x_emb_n={n_supervised}"].mean()
+        y_mean = df[f"y_emb_n={n_supervised}"].mean()
+
+        idx_min = get_nearest_point(x_mean, y_mean, df, n_sup=n_supervised)
+
+        mean_marker = get_marker(df, idx_min, label='X', n_sup=n_supervised)
+
+        markers.append(mean_marker)
+
     return markers, idx_min, idx_max, idx_mid
 
 
@@ -122,6 +128,7 @@ def get_fig(df: pd.DataFrame,
                      hover_name='id'
                      )
 
+    idx_max, idx_min, idx_mid = None, None, None
     if test_num is not None:
         markers, idx_min, idx_max, idx_mid = get_markers_for_test(df, dafx, test_num, example_num, n_supervised)
         for mark in markers:
@@ -207,6 +214,7 @@ else:
     example_num = None
 
 fig, idx_min, idx_max, idx_mid = get_fig(df, n_supervised, colour, dafx, test_num, example_num)
+
 selected_points = plotly_events(fig)
 
 # Show clean audio
@@ -226,14 +234,17 @@ if test_num == 1 and idx_min is not None:
     st.markdown(f"C audio")
     f_name = get_audio_file_for_index(idx_mid, df)
     st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
-
 else:
+    if test_num == 2 and idx_min is not None:
+        st.markdown(f"X audio")
+        f_name = get_audio_file_for_index(idx_min, df)
+        st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
     try:
         a = selected_points[0]
         index = get_nearest_point(a['x'], a['y'], df, n_supervised)
 
         # Show effected audio
-        st.markdown(f"Effected audio (ID={index})")
+        st.markdown(f"Selected point (ID={index})")
         f_name = get_audio_file_for_index(index, df)
         st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
 
