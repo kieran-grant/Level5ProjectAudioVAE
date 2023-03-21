@@ -7,6 +7,7 @@ import os
 import random
 from typing import List
 
+import librosa
 import torch.utils.data
 from tqdm import tqdm
 
