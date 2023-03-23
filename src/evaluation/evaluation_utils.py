@@ -33,7 +33,7 @@ def apply_pedalboard_distortion(audio, sr=24_000):
     board = Pedalboard([])
     settings = {}
 
-    drive_db = np.random.randint(15, 40)
+    drive_db = np.random.randint(25, 40)
 
     settings["dist_drive_db"] = drive_db
     board.append(Distortion(drive_db=drive_db))
