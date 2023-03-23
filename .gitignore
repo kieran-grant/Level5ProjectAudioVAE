@@ -139,4 +139,4 @@ MNIST
 .idea
 src/vqvae_tester/data
 
-!*/src/evaluation/*.wav
+!src/evaluation/data/mushra_audio/*/*.wav
