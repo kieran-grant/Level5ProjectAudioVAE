@@ -11,7 +11,7 @@ from src.plot_utils import dafx_from_name
 from src.utils import peak_normalise, effect_to_end_to_end_checkpoint_id
 
 
-def apply_pedalboard_effect(effect_name, audio, sr=24_000):
+def apply_pedalboard_effect(effect_name: str, audio: torch.Tensor, sr: int =24_000):
     implementations = {
         "overdrive": apply_pedalboard_distortion,
         "multiband": apply_pedalboard_compression,
@@ -19,7 +19,12 @@ def apply_pedalboard_effect(effect_name, audio, sr=24_000):
 
     name = effect_name.lower()
     if name in implementations.keys():
-        return implementations[name](audio, sr=sr)
+        device = audio.device
+        audio = audio.cpu().numpy()
+        y, settings = implementations[name](audio.squeeze(), sr=sr)
+        y_tensor = torch.Tensor(y.reshape(1, 1, -1)).to(device)
+        y_tensor = peak_normalise(y_tensor)
+        return y_tensor, settings
     else:
         raise NotImplementedError("Effect must be one of: ", list(implementations.keys()))
 
@@ -34,7 +39,6 @@ def apply_pedalboard_distortion(audio, sr=24_000):
     board.append(Distortion(drive_db=drive_db))
 
     effected_audio = board(audio, sr)
-    effected_audio = peak_normalise(effected_audio)
 
     return effected_audio, settings
 
@@ -73,7 +77,6 @@ def apply_pedalboard_compression(audio, sr=24_000):
     board.append(Compressor(threshold_db=threshold, ratio=ratio))
 
     effected_audio = board(audio, sr)
-    effected_audio = peak_normalise(effected_audio)
 
     return effected_audio, settings
 

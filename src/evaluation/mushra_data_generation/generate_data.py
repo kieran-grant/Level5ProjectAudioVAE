@@ -14,7 +14,8 @@ from src.utils import get_training_reference
 parser = ArgumentParser()
 
 parser.add_argument("--num_examples", type=int, default=5)
-parser.add_argument("--dafx_names", nargs="+", default=["overdrive", "multiband"])
+parser.add_argument("--dafx_names", nargs="+", default=["mda Overdrive", "mda MultiBand"])
+parser.add_argument("--dataset", type=str, default="daps")
 parser.add_argument("--checkpoints_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
 parser.add_argument("--audio_dir", type=str,
@@ -31,7 +32,7 @@ args = parser.parse_args()
 
 def save_audio(data_dir, signal, filename, sample_rate=24_000):
     if type(signal) == torch.Tensor:
-        signal = signal.cpu().numpy()
+        signal = signal.detach().cpu().numpy()
 
     f_name_path = f"{data_dir}/{filename}"
     wavfile.write(f_name_path, sample_rate, signal.squeeze())
@@ -41,8 +42,8 @@ def save_audio(data_dir, signal, filename, sample_rate=24_000):
 def generate_st_command(x_path, y_ref_path):
     return "python " \
            "scripts/process.py " \
-           f"-i {x_path}" \
-           f"-r {y_ref_path}" \
+           f"-i {x_path} " \
+           f"-r {y_ref_path} " \
            "-c checkpoints/style/jamendo/autodiff/lightning_logs/version_0/checkpoints/epoch\=362-step\=1210241-val-jamendo-autodiff.ckpt"
 
 
@@ -67,12 +68,13 @@ if __name__ == "__main__":
 
         dataset = get_dataset(
             dafx_name="clean",
-            audio_length=model.hparams.train_length,
+            audio_length=model.hparams.train_length * 2,
             args=args
         )
 
         dafx = dafx_from_name(dafx_name)
 
+        dafx_name = dafx_name.split()[-1].lower()
         for i, batch in tqdm(enumerate(dataset)):
             x, y = batch
 
@@ -104,6 +106,6 @@ if __name__ == "__main__":
         df.to_csv(f"{args.results_dir}/{dafx_name}.csv")
 
         if len(st_commands) > 1:
-            with open(f"{args.results_dir}/comp_script.sh") as f:
+            with open(f"{args.results_dir}/comp_script.sh", "w") as f:
                 for line in st_commands:
                     f.write(f"{line}\n")
