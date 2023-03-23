@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import torch
-from pedalboard import HighShelfFilter, LowShelfFilter, Compressor, Distortion
+from pedalboard import HighShelfFilter, LowShelfFilter, Compressor, Distortion, Delay, Reverb
 from pedalboard.pedalboard import Pedalboard
 
 from src.dataset.paired_audio_dataset import PairedAudioDataset
@@ -11,10 +11,13 @@ from src.plot_utils import dafx_from_name
 from src.utils import peak_normalise, effect_to_end_to_end_checkpoint_id
 
 
-def apply_pedalboard_effect(effect_name: str, audio: torch.Tensor, sr: int =24_000):
+def apply_pedalboard_effect(effect_name: str, audio: torch.Tensor, sr: int = 24_000):
     implementations = {
+        "combo": apply_pedalboard_distortion,
         "overdrive": apply_pedalboard_distortion,
+        "delay": apply_pedalboard_delay,
         "multiband": apply_pedalboard_compression,
+        "ambience": apply_pedalboard_reverb,
     }
 
     name = effect_name.lower()
@@ -27,6 +30,22 @@ def apply_pedalboard_effect(effect_name: str, audio: torch.Tensor, sr: int =24_0
         return y_tensor, settings
     else:
         raise NotImplementedError("Effect must be one of: ", list(implementations.keys()))
+
+
+def apply_pedalboard_delay(audio, sr=24_000):
+    board = Pedalboard([])
+    settings = {}
+
+    delay_secs = np.random.randint(5, 10) / 10
+    feedback = np.random.randint(5, 10) / 10
+
+    settings["delay_secs"] = delay_secs
+    settings["delay_feedback"] = feedback
+    board.append(Delay(delay_seconds=delay_secs, feedback=feedback))
+
+    effected_audio = board(audio, sr)
+
+    return effected_audio, settings
 
 
 def apply_pedalboard_distortion(audio, sr=24_000):
@@ -75,6 +94,20 @@ def apply_pedalboard_compression(audio, sr=24_000):
     settings["comp_threshold"] = threshold
 
     board.append(Compressor(threshold_db=threshold, ratio=ratio))
+
+    effected_audio = board(audio, sr)
+
+    return effected_audio, settings
+
+
+def apply_pedalboard_reverb(audio, sr=24_000):
+    board = Pedalboard([])
+    settings = {}
+
+    room_size = np.random.randint(2, 10) / 10
+
+    settings["reverb_room_size"] = room_size
+    board.append(Reverb(room_size=room_size))
 
     effected_audio = board(audio, sr)
 

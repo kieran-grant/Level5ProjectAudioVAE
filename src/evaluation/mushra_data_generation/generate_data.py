@@ -15,7 +15,13 @@ from src.utils import get_training_reference, peak_normalise
 parser = ArgumentParser()
 
 parser.add_argument("--num_examples", type=int, default=5)
-parser.add_argument("--dafx_names", nargs="+", default=["mda Overdrive", "mda MultiBand"])
+parser.add_argument("--dafx_names", nargs="+", default=[
+    "mda Overdrive",
+    "mda MultiBand",
+    # "mda Delay",
+    # "mda Ambience"
+    ])
+
 parser.add_argument("--dataset", type=str, default="daps")
 parser.add_argument("--checkpoints_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
@@ -96,8 +102,9 @@ if __name__ == "__main__":
 
             x, y_ref, y = get_training_reference(x, y)
 
-            # apply random audio settings (ANCHOR)
-            rand_y_hat = dafx.process_audio_with_random_settings(x)
+            # apply fixed audio settings (ANCHOR)
+            rand_p = dafx.get_random_parameter_settings()
+            rand_y_hat = dafx.apply(x, rand_p)
             rand_y_hat = peak_normalise(rand_y_hat)
 
             # predict with end-to-end model
@@ -124,6 +131,6 @@ if __name__ == "__main__":
         df.to_csv(f"{args.results_dir}/{dafx_name}.csv")
 
         if len(st_commands) > 1:
-            with open(f"{args.results_dir}/comp_script.sh", "w") as f:
+            with open(f"{args.results_dir}/{dafx_name}_script.sh", "w") as f:
                 for line in st_commands:
                     f.write(f"{line}\n")
