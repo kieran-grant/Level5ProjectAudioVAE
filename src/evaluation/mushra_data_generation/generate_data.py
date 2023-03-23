@@ -10,7 +10,7 @@ from tqdm import tqdm
 from src.evaluation.evaluation_utils import get_checkpoint_for_effect, get_dataset, apply_pedalboard_effect
 from src.models.end_to_end import EndToEndSystem
 from src.plot_utils import dafx_from_name
-from src.utils import get_training_reference
+from src.utils import get_training_reference, peak_normalise
 
 parser = ArgumentParser()
 
@@ -92,13 +92,17 @@ if __name__ == "__main__":
 
             # create effected audio (REFERENCE)
             y, settings = apply_pedalboard_effect(effect_name=dafx_name, audio=y, sr=args.sample_rate)
+            y = peak_normalise(y)
+
             x, y_ref, y = get_training_reference(x, y)
 
             # apply random audio settings (ANCHOR)
             rand_y_hat = dafx.process_audio_with_random_settings(x)
+            rand_y_hat = peak_normalise(rand_y_hat)
 
             # predict with end-to-end model
             e2e_y_hat, p, z = model(x, y=y_ref)
+            e2e_y_hat = peak_normalise(e2e_y_hat)
 
             fname = f"{dafx_name}{i}.wav"
 
