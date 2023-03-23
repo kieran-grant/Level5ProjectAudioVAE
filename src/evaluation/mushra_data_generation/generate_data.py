@@ -1,3 +1,4 @@
+import os
 from argparse import ArgumentParser
 
 import pandas as pd
@@ -31,6 +32,10 @@ args = parser.parse_args()
 
 
 def save_audio(data_dir, signal, filename, sample_rate=24_000):
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        print(data_dir, " was created!")
+
     if type(signal) == torch.Tensor:
         signal = signal.detach().cpu().numpy()
 
@@ -39,12 +44,19 @@ def save_audio(data_dir, signal, filename, sample_rate=24_000):
     return f_name_path
 
 
-def generate_st_command(x_path, y_ref_path):
+def generate_st_command(x_path, y_ref_path, fname, args):
+    out_dir = f"{args.results_dir}/st_y_hat/"
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+        print(out_dir, " was created!")
+
     return "python " \
            "scripts/process.py " \
            f"-i {x_path} " \
            f"-r {y_ref_path} " \
-           "-c checkpoints/style/jamendo/autodiff/lightning_logs/version_0/checkpoints/epoch\=362-step\=1210241-val-jamendo-autodiff.ckpt"
+           "-c checkpoints/style/jamendo/autodiff/lightning_logs/version_0/checkpoints/epoch\=362-step\=1210241-val-jamendo-autodiff.ckpt " \
+           f"-out_dir {out_dir} " \
+           f"-out_f_name {fname} "
 
 
 if __name__ == "__main__":
@@ -88,15 +100,17 @@ if __name__ == "__main__":
             # predict with end-to-end model
             e2e_y_hat, p, z = model(x, y=y_ref)
 
-            x_file = save_audio(args.results_dir, signal=x, filename=f"x_{i}.wav")
-            y_file = save_audio(args.results_dir, signal=y, filename=f"y_{i}.wav")
-            y_ref_file = save_audio(args.results_dir, signal=y_ref, filename=f"y_ref_{i}.wav")
-            rand_y_file = save_audio(args.results_dir, signal=rand_y_hat, filename=f"rand_y_hat_{i}.wav")
-            e2e_y_file = save_audio(args.results_dir, signal=e2e_y_hat, filename=f"e2d_y_hat_{i}.wav")
+            fname = f"{dafx_name}{i}.wav"
+
+            x_file = save_audio(f"{args.results_dir}/x/", signal=x, filename=fname)
+            y_file = save_audio(f"{args.results_dir}/y/", signal=y, filename=fname)
+            y_ref_file = save_audio(f"{args.results_dir}/y_ref/", signal=y_ref, filename=fname)
+            rand_y_file = save_audio(f"{args.results_dir}/rand_y_hat/", signal=rand_y_hat, filename=fname)
+            e2e_y_file = save_audio(f"{args.results_dir}/e2e_y_hat/", signal=e2e_y_hat, filename=fname)
 
             # if compression, also get style transfer approx
             if dafx_name.lower() == "multiband":
-                cmd = generate_st_command(x_file, y_ref_file)
+                cmd = generate_st_command(x_file, y_ref_file, args=args, fname=fname)
                 st_commands.append(cmd)
 
             settings["id"] = i

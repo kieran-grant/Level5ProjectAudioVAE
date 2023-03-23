@@ -138,3 +138,5 @@ configs
 MNIST
 .idea
 src/vqvae_tester/data
+
+!*/src/evaluation/*.wav
