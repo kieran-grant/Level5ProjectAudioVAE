@@ -1,4 +1,4 @@
-Effect,Question,QuestionNumber,Score,Comments
+effect,question_text,question_num,score,comments
 Overdrive,"Overall, how intuative did you find the interface to use?",1,7,Expected brighter and darker sounds to be mirror image.
 MultiBand,"Overall, how intuative did you find the interface to use?",1,9,Once familar with changes in space easier to tell.
 Overdrive,Were you able to accurately apply the effect you wanted?,2,10,Change from least effected - expect more of a graidnet in the drive effect. Less extreme off the bat.

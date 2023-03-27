@@ -1,4 +1,4 @@
-Effect,A,B,Example,MatchingScore,Comments
+effect,a,b,example_num,score,comments
 Overdrive,x_min,x_max,1,10,
 Overdrive,y_min,y_max,2,10,
 Overdrive,drive_min,drive_max,3,7,"brighter than expected, expected closer to B"
