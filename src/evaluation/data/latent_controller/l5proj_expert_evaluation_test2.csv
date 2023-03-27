@@ -1,0 +1,9 @@
+Effect,Prompt,NumAttempts,EaseScore,IdChosen,Comments
+Overdrive,Apply a small amount of drive to the clean audio,2,10,269,
+Overdrive,Apply as much drive as possible to the clean audio,5,8,805,"more overdrive left than right, brighter == more overdriven"
+Overdrive,Apply an overdrive setting with lots of high frequency content to the clean audio,1,10,142,
+Overdrive,Apply an overdrive setting with very little high frequency content to the clean audio,1,10,539,
+MultiBand,Make the clean audio sound slightly brighter,4,7,452,
+MultiBand,Make the clean audio sound as bright as possible,5,9,889,
+MultiBand,Make the clean audio sound slightly bassier,4,9,816,
+MultiBand,Make the clean audio sound as bassy as possible,1,10,394,

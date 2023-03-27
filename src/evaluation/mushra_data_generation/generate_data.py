@@ -14,12 +14,13 @@ from src.utils import get_training_reference, peak_normalise
 
 parser = ArgumentParser()
 
-parser.add_argument("--num_examples", type=int, default=5)
+parser.add_argument("--num_examples", type=int, default=3)
 parser.add_argument("--dafx_names", nargs="+", default=[
     "mda Overdrive",
     "mda MultiBand",
-    # "mda Delay",
-    # "mda Ambience"
+    "mda Delay",
+    "mda Thru-Zero Flanger",
+    "mda Ambience",
     ])
 
 parser.add_argument("--dataset", type=str, default="daps")
@@ -32,7 +33,7 @@ parser.add_argument("--results_dir", type=str,
 parser.add_argument("--style_transfer_dir", type=str,
                     default="/home/kieran/DeepAFx-ST/")
 parser.add_argument("--sample_rate", type=int, default=24_000)
-parser.add_argument("--seed", type=int, default=123)
+parser.add_argument("--seed", type=int, default=1234)
 
 args = parser.parse_args()
 
@@ -69,10 +70,10 @@ if __name__ == "__main__":
     pl.seed_everything(args.seed)
     args.dataset_input_dirs = [f"{args.dataset}_{args.sample_rate}"]
 
-    audio_settings = []
-    st_commands = ["#! /bin/bash"]
-
     for dafx_name in args.dafx_names:
+        audio_settings = []
+        st_commands = ["#! /bin/bash"]
+
         print(f"Generating data for {dafx_name}...")
         checkpoint_id = get_checkpoint_for_effect(dafx_name, args.checkpoints_dir)
         print(f"Getting {args.dataset} metrics for: {dafx_name}")
@@ -125,6 +126,11 @@ if __name__ == "__main__":
                 st_commands.append(cmd)
 
             settings["id"] = i
+
+            # Add parameter settings to setting list
+            for j in range(p.size()[-1]):
+                settings[f"p_{dafx.idx_to_param_map[j]}"] = p.squeeze()[j].item()
+
             audio_settings.append(settings)
 
         df = pd.DataFrame(audio_settings)

@@ -1,0 +1,7 @@
+Effect,A,B,Example,MatchingScore,Comments
+Overdrive,x_min,x_max,1,10,
+Overdrive,y_min,y_max,2,10,
+Overdrive,drive_min,drive_max,3,7,"brighter than expected, expected closer to B"
+MultiBand,bright_min,bright_max,1,8,
+MultiBand,x_min,x_max,2,9,
+MultiBand,y_min,y_max,3,9,
