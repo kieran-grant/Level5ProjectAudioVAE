@@ -140,3 +140,4 @@ MNIST
 src/vqvae_tester/data
 
 !src/evaluation/data/mushra_audio/*/*.wav
+/src/evaluation/data/dafx_latent_extraction/feats_data.npy
