@@ -70,9 +70,9 @@ if __name__ == "__main__":
     # Change settings for training
     args.input_dirs = ['vctk_24000']
 
-    args.dafx_file = "/src/dafx/mda.vst3"
+    args.dafx_file = "../dafx/mda.vst3"
     args.dafx_names = DAFX_TO_USE
-    args.audio_dir = "/src/audio"
+    args.audio_dir = "../audio"
 
     args.latent_dim = 128
 

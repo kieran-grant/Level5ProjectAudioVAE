@@ -344,7 +344,7 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--beta_cycle_length", type=int, default=11)
 
         # --------- DAFX ------------
-        parser.add_argument("--dafx_file", type=str, default="src/dafx/mda.vst3")
+        parser.add_argument("--dafx_file", type=str, default="../dafx/mda.vst3")
         parser.add_argument("--dafx_names", nargs="*")
         parser.add_argument("--dafx_param_names", nargs="*", default=None)
 
@@ -363,7 +363,7 @@ class SpectrogramVAE(pl.LightningModule):
         parser.add_argument("--normalise_audio", type=bool, default=True)
 
         # ------- Dataset  -----------
-        parser.add_argument("--audio_dir", type=str, default="src/audio")
+        parser.add_argument("--audio_dir", type=str, default="../audio")
         parser.add_argument("--ext", type=str, default="wav")
         parser.add_argument("--input_dirs", nargs="+", default=['musdb18_24000', 'vctk_24000'])
         parser.add_argument("--buffer_reload_rate", type=int, default=1000)
