@@ -231,14 +231,17 @@ st.audio(get_audio_for_file(f"{DIR}/audio/audio_clean.wav"))
 # if idx_min is not None, then others are not None
 if test_num == 1 and idx_min is not None:
     st.markdown(f"A audio")
+    print(f"A idx: {idx_min}")
     f_name = get_audio_file_for_index(idx_min, df)
     st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
 
     st.markdown(f"B audio")
+    print(f"B idx: {idx_max}")
     f_name = get_audio_file_for_index(idx_max, df)
     st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
 
     st.markdown(f"C audio")
+    print(f"C idx: {idx_mid}")
     f_name = get_audio_file_for_index(idx_mid, df)
     st.audio(get_audio_for_file(f"{DIR}/audio/{f_name}"), format='audio/wav')
 else:

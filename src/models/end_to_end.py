@@ -42,15 +42,32 @@ class EndToEndSystem(pl.LightningModule):
     def _build_audio_encoder(self):
         if self.hparams.audio_encoder_ckpt is not None:
             # load encoder weights from a pre-trained system
-            system = SpectrogramVAE.load_from_checkpoint(self.hparams.audio_encoder_ckpt)
-            self.hparams.controller_input_dim = system.hparams.latent_dim * 2
+            system = SpectrogramVAE.load_from_checkpoint(self.hparams.audio_encoder_cekpt)
 
             for param in system.parameters():
                 param.requires_grad = False
-
-            self.audio_encoder = system
         else:
-            raise NotImplementedError("End-to-end system expects pre-trained audio VAE")
+            args = self._get_audio_encoder_args()
+            system = SpectrogramVAE(**vars(args))
+
+        self.audio_encoder = system
+        self.hparams.controller_input_dim = system.hparams.latent_dim * 2
+
+    @staticmethod
+    def _get_audio_encoder_args():
+        # arg parse for config
+        parser = ArgumentParser()
+
+        # Add available trainer args and system args
+        parser = pl.Trainer.add_argparse_args(parser)
+        parser = SpectrogramVAE.add_model_specific_args(parser)
+
+        # Parse
+        args = parser.parse_args()
+
+        args.dafx_names = []
+
+        return args
 
     def _build_controller_network(self):
         layers = []
@@ -310,12 +327,18 @@ class EndToEndSystem(pl.LightningModule):
             optimizer.step(closure=optimizer_closure)
 
     def configure_optimizers(self):
+        trainable_params = []
+
+        if self.hparams.audio_encoder_ckpt is None:
+            trainable_params.append(self.audio_encoder.parameters()),
+        trainable_params.append(self.controller.parameters()),
+        trainable_params.append(self.dafx_layer.parameters())
+
         # we need additional optimizer for the discriminator
         optimizers = []
         g_optimizer = torch.optim.Adam(
             chain(
-                self.controller.parameters(),
-                self.dafx_layer.parameters()
+                *trainable_params
             ),
             lr=self.hparams.lr,
             betas=(0.9, 0.999),

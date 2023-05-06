@@ -350,16 +350,16 @@ class SpectrogramVAE(pl.LightningModule):
 
         # --------- VAE -------------
         parser.add_argument("--num_channels", type=int, default=1)
-        parser.add_argument("--hidden_dim", nargs="*", default=(32, 5, 129))
-        parser.add_argument("--latent_dim", type=int, default=32)
+        parser.add_argument("--hidden_dim", nargs="*", default=(32, 9, 129))
+        parser.add_argument("--latent_dim", type=int, default=128)
         parser.add_argument("--conv_kernel", type=int, default=3)
         parser.add_argument("--conv_padding", type=int, default=1)
         parser.add_argument("--conv_stride", type=int, default=2)
 
         # -------- Spectrogram ----------
         parser.add_argument("--n_fft", type=int, default=4096)
-        parser.add_argument("--hop_length", type=int, default=2048)
-        parser.add_argument("--window_size", type=int, default=4096)
+        parser.add_argument("--hop_length", type=int, default=1024)
+        parser.add_argument("--window_size", type=int, default=2048)
         parser.add_argument("--normalise_audio", type=bool, default=True)
 
         # ------- Dataset  -----------
