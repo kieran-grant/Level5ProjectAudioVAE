@@ -78,7 +78,7 @@ if __name__ == "__main__":
         ],
         num_sanity_val_steps=0,
         accelerator='cpu',
-        gradient_clip_val=3.,
+        gradient_clip_val=.5,
     )
 
     # create the System

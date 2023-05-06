@@ -170,7 +170,11 @@ class DAFXWrapper(BaseDAFXWrapper):
         y = self._safe_convert_tensor_to_numpy_cpu(signal)
         y = np.array([y, y])
         effected = self.process_effect(y)
-        return librosa.to_mono(effected)
+        try:
+            return librosa.to_mono(effected)
+        except librosa.util.exceptions.ParameterError as e:
+            print(f"\nException in effecting audio (params: {self.get_current_normalised_param_settings()}): {e}")
+            return signal
 
     def process_audio_with_random_settings(self,
                                            signal: torch.Tensor,

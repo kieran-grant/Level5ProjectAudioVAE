@@ -216,7 +216,7 @@ class EndToEndSystem(pl.LightningModule):
         p = torch.sigmoid(p_logits)
 
         # Clamp -> [0.01, 0.99]
-        p = torch.clamp(p, min=0.01, max=0.99)
+        p = torch.clamp(p, min=0.05, max=0.95)
 
         # Always predict dummy settings
         # p = torch.ones(x.size()[0], self.dafx.get_num_params(), requires_grad=True) * 0.5
@@ -440,7 +440,7 @@ class EndToEndSystem(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # --- Training  ---
         parser.add_argument("--batch_size", type=int, default=12)
-        parser.add_argument("--lr", type=float, default=1e-3)
+        parser.add_argument("--lr", type=float, default=1e-4)
         parser.add_argument("--lr_patience", type=int, default=20)
         parser.add_argument("--recon_losses", nargs="+", default=["mrstft", "l1"])
         parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0, 100.0])
@@ -458,7 +458,7 @@ class EndToEndSystem(pl.LightningModule):
         parser.add_argument("--audio_encoder_ckpt", type=str, default=None)
 
         # ---  SPSA  ---
-        parser.add_argument("--spsa_epsilon", type=float, default=0.01)
+        parser.add_argument("--spsa_epsilon", type=float, default=0.0001)
         parser.add_argument("--spsa_schedule", type=bool, default=True)
         parser.add_argument("--spsa_patience", type=int, default=5)
         parser.add_argument("--spsa_verbose", type=bool, default=True)
