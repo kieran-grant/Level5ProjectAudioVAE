@@ -440,7 +440,7 @@ class EndToEndSystem(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # --- Training  ---
         parser.add_argument("--batch_size", type=int, default=12)
-        parser.add_argument("--lr", type=float, default=1e-4)
+        parser.add_argument("--lr", type=float, default=3e-5)
         parser.add_argument("--lr_patience", type=int, default=20)
         parser.add_argument("--recon_losses", nargs="+", default=["mrstft", "l1"])
         parser.add_argument("--recon_loss_weights", nargs="+", default=[1.0, 100.0])
