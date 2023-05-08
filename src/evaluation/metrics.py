@@ -113,7 +113,7 @@ parser.add_argument("--dafx_names", nargs="+",
                         "mda Thru-Zero Flanger",
                         "mda Leslie"
                     ])
-parser.add_argument("--dataset", type=str, default="daps")
+parser.add_argument("--dataset", type=str, default="musdb18")
 parser.add_argument("--checkpoints_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
 parser.add_argument("--audio_dir", type=str,
