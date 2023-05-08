@@ -14,6 +14,8 @@ from src.utils import *
 
 
 def get_results_filename(dafx, args):
+    if args.untrained_audio_encoder:
+        return args.results_dir + f"/{dafx.split()[-1].lower()}_{args.dataset}_{args.num_examples}_untrained.csv"
     return args.results_dir + f"/{dafx.split()[-1].lower()}_{args.dataset}_{args.num_examples}.csv"
 
 
@@ -40,8 +42,10 @@ def main(args):
 
     for dafx_name in args.dafx_names:
         print(f"Getting {args.dataset} metrics for: {dafx_name}")
+
         checkpoint = get_checkpoint_for_effect(dafx_name,
-                                               args.checkpoints_dir)
+                                               args.checkpoints_dir,
+                                               untrained=args.untrained_audio_encoder)
 
         # load model
         print(f"Loading model from checkpoint: ", checkpoint)
@@ -109,7 +113,7 @@ parser.add_argument("--dafx_names", nargs="+",
                         "mda Thru-Zero Flanger",
                         "mda Leslie"
                     ])
-parser.add_argument("--dataset", type=str, default="musdb18")
+parser.add_argument("--dataset", type=str, default="daps")
 parser.add_argument("--checkpoints_dir", type=str,
                     default="/home/kieran/Level5ProjectAudioVAE/src/train_scripts/l5proj_end2end")
 parser.add_argument("--audio_dir", type=str,
@@ -119,6 +123,7 @@ parser.add_argument("--results_dir", type=str,
 parser.add_argument("--num_examples", type=int, default=5_000)
 parser.add_argument("--sample_rate", type=int, default=24_000)
 parser.add_argument("--seed", type=int, default=123)
+parser.add_argument("--untrained_audio_encoder", type=bool, default=True)
 
 # Parse
 args = parser.parse_args()

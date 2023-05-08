@@ -222,6 +222,27 @@ def get_training_reference(x: torch.Tensor, y: torch.Tensor):
     return x, y_ref, y
 
 
+def effect_to_end_to_end_checkpoint_id_untrained(effect_name):
+    chkpt_map = {
+        "overdrive": "7ofufven",    # checked
+        "ringmod": "gvub9kc8",  # checked
+        "delay": "orkeq5xe",    # checked
+        "combo": "yyn45fwr",    # checked
+        "multiband": "s27dx8nj",    # checked
+        "ambience": "278jzh4i",     # checked
+        "dynamics": "k5winpy1",     # checked
+        "flanger": "j4efeb5x",  # checked
+        "leslie": "7rvd1yo7",    # checked
+    }
+
+    if len(effect_name.split()) >= 2:
+        effect_name = effect_name.split()[-1]
+
+    effect_name = effect_name.lower()
+
+    return chkpt_map.get(effect_name)
+
+
 def effect_to_end_to_end_checkpoint_id(effect_name):
     chkpt_map = {
         "overdrive": "fboro0y2",
@@ -241,4 +262,3 @@ def effect_to_end_to_end_checkpoint_id(effect_name):
     effect_name = effect_name.lower()
 
     return chkpt_map.get(effect_name)
-

@@ -8,7 +8,7 @@ from pedalboard.pedalboard import Pedalboard
 
 from src.dataset.paired_audio_dataset import PairedAudioDataset
 from src.plot_utils import dafx_from_name
-from src.utils import peak_normalise, effect_to_end_to_end_checkpoint_id
+from src.utils import peak_normalise, effect_to_end_to_end_checkpoint_id, effect_to_end_to_end_checkpoint_id_untrained
 
 
 def apply_pedalboard_effect(effect_name: str, audio: torch.Tensor, sr: int = 24_000):
@@ -157,8 +157,12 @@ def get_val_checkpoint_filename(checkpoint_folder):
     return latest_file
 
 
-def get_checkpoint_for_effect(effect_name, checkpoints_dir):
-    checkpoint_id = effect_to_end_to_end_checkpoint_id(effect_name)
+def get_checkpoint_for_effect(effect_name, checkpoints_dir, untrained=False):
+    if untrained:
+        checkpoint_id = effect_to_end_to_end_checkpoint_id_untrained(effect_name)
+    else:
+        checkpoint_id = effect_to_end_to_end_checkpoint_id(effect_name)
+
     checkpoint_id_dir = os.path.join(checkpoints_dir, checkpoint_id + "/checkpoints/")
     checkpoint_file = get_val_checkpoint_filename(checkpoint_id_dir)
     return checkpoint_file
