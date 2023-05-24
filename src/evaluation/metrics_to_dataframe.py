@@ -10,7 +10,7 @@ files = glob.glob(f"{RESULTS_DIR}/*.csv")
 
 for dataset in DATASETS:
     dataset_files = [fl for fl in files if dataset in fl]
-    dataset_files = [fl for fl in dataset_files if "untrained" in fl]
+    dataset_files = [fl for fl in dataset_files if "baseline" in fl]
     dataframes = []
     for file_name in dataset_files:
         # Extract the name of the effect using regex
@@ -30,4 +30,4 @@ for dataset in DATASETS:
         dataframes.append(df)
 
     df = pd.concat(dataframes)
-    df.to_csv(f"{RESULTS_DIR}/{dataset}_untrained.csv")
+    df.to_csv(f"{RESULTS_DIR}/{dataset}_baseline.csv")
